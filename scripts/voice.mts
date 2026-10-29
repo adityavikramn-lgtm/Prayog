@@ -18,9 +18,18 @@ import fs from "node:fs";
 import path from "node:path";
 import * as coulomb from "../src/templates/coulomb/script";
 import * as hemisphere from "../src/templates/hemisphere/script";
+import * as demo from "../src/pitch/script";
+
+/** Where each video's clips go; the render script looks in public/voice/<template>-<format>-<lang>. */
+const FOLDER: Record<string, string> = {
+  hemisphere: "hemisphere-explainer-en",
+  coulomb: "coulomb-explainer-en",
+  teacher: "teacher-demo-en",
+};
 
 /** Every video that has an English narration: one { key, say } per caption line. */
 const NARRATION: Record<string, () => { key: string; say: string }[]> = {
+  teacher: () => demo.DEMO_BEATS.flatMap((b) => b.lines.map((l, i) => ({ key: demo.lineKey(b.id, i), say: demo.spoken(l) }))),
   hemisphere: () => {
     const values = hemisphere.scriptValues();
     return hemisphere.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: hemisphere.lineKey(b.id, i), say: hemisphere.spokenText(line, values) })));
@@ -65,7 +74,7 @@ async function makeVoice(template: string) {
   const source = NARRATION[template];
   if (!source) fail(`No narration script for "${template}" yet. Try: ${Object.keys(NARRATION).join(", ")}`);
   const lines = source();
-  const outDir = path.join("public", "voice", `${template}-explainer-en`);
+  const outDir = path.join("public", "voice", FOLDER[template]);
   const ext = engine === "windows" ? "wav" : "mp3";
   const todo = lines.filter((l) => force || !fs.existsSync(path.join(outDir, `${l.key}.${ext}`)));
   const chars = todo.reduce((n, l) => n + l.say.length, 0);

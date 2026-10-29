@@ -6,7 +6,7 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
-import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds } from "../pitch/TeacherDemo";
+import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds, teacherDemoMetadata } from "../pitch/TeacherDemo";
 import {
   COULOMB_FPS,
   CoulombCover,
@@ -118,7 +118,8 @@ export const RemotionRoot: React.FC = () => {
         fps={DEMO_FPS}
         width={1920}
         height={1080}
-        defaultProps={{ lang: "en" as const }}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={teacherDemoMetadata}
       />
       <Still id="teacher-demo-cover" component={TeacherDemoCover} width={1920} height={1080} />
       <Still

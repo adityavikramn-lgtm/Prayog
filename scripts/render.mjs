@@ -30,7 +30,7 @@ const CATALOG = {
     beats: "per-line", // one clip per caption line, made by `npm run voice -- coulomb`
     langs: ["en", "hi"],
   },
-  teacher: { formats: ["demo"], beats: [], langs: ["en"] },
+  teacher: { formats: ["demo"], beats: "per-line", langs: ["en"] }, // clips from `npm run voice -- teacher`
   // One voice clip per spoken line (made by `npm run voice -- hemisphere`), not one per beat.
   hemisphere: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };

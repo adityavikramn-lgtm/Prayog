@@ -1,6 +1,17 @@
+import { Audio } from "@remotion/media";
 import "katex/dist/katex.min.css";
 import React from "react";
-import { AbsoluteFill, Freeze, Sequence, useCurrentFrame, useVideoConfig, interpolate, Easing } from "remotion";
+import {
+  AbsoluteFill,
+  CalculateMetadataFunction,
+  Easing,
+  Freeze,
+  Sequence,
+  interpolate,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from "remotion";
 import { z } from "zod";
 import { Tex } from "../components/Tex";
 import renderTimes from "../generated/render-times.json";
@@ -17,7 +28,7 @@ import { simulateProjectile } from "../templates/projectile/simulate";
 import { buildTimeline } from "../templates/projectile/timeline";
 import { COLORS } from "../theme";
 import { CLAMP, Captions, Card, fade } from "../video/ui";
-import { Beat, BeatId, DEMO_BEATS, demoSeconds } from "./script";
+import { BeatId, DEMO_BEATS, PlannedBeat, Voice, demoSeconds, planDemo } from "./script";
 
 export { demoSeconds };
 
@@ -27,7 +38,12 @@ export { demoSeconds };
  * read from the real test and render results (src/generated/*.json).
  */
 
-export const TeacherDemoProps = z.object({ lang: z.enum(["en"]) });
+export const TeacherDemoProps = z.object({
+  lang: z.enum(["en"]),
+  /** One clip per caption line, keyed "beat-index" (made by `npm run voice -- teacher`). */
+  voice: z.record(z.string(), z.object({ src: z.string(), seconds: z.number().positive() })),
+});
+export type TeacherDemoProps = z.infer<typeof TeacherDemoProps>;
 export const DEMO_FPS = 30;
 
 const TOPICS = ["Projectile motion", "Coulomb's law"];
@@ -38,18 +54,28 @@ const times = renderTimes as Record<string, Timing | undefined>;
 const EASE = { ...CLAMP, easing: Easing.inOut(Easing.cubic) };
 const CAPTION_BOX = { left: 160, right: 160, bottom: 36 };
 
-export const TeacherDemo: React.FC = () => {
+export const teacherDemoMetadata: CalculateMetadataFunction<TeacherDemoProps> = ({ props }) => ({
+  durationInFrames: Math.round(demoSeconds(props.voice as Voice) * DEMO_FPS),
+});
+
+export const TeacherDemo: React.FC<TeacherDemoProps> = ({ voice }) => {
   const { fps } = useVideoConfig();
-  let from = 0;
+  const plan = planDemo(voice as Voice);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
-      {DEMO_BEATS.map((b) => {
-        const start = Math.round(from * fps);
-        from += b.seconds;
-        const end = Math.round(from * fps);
+      {plan.beats.map((b) => {
+        const start = Math.round(b.from * fps);
+        const end = Math.round((b.from + b.seconds) * fps);
         return (
           <Sequence key={b.id} name={b.id} from={start} durationInFrames={end - start}>
             <BeatView beat={b} />
+            {b.lines.map((l, i) =>
+              l.clip ? (
+                <Sequence key={i} from={Math.round(l.at * fps)} layout="none">
+                  <Audio src={staticFile(l.clip.src)} />
+                </Sequence>
+              ) : null,
+            )}
           </Sequence>
         );
       })}
@@ -57,14 +83,26 @@ export const TeacherDemo: React.FC = () => {
   );
 };
 
-const BeatView: React.FC<{ beat: Beat }> = ({ beat }) => {
+/**
+ * The scenes were timed to the scripted line times. When the voice pushes a line
+ * later, stretch the scene's clock between lines so each picture still appears
+ * with the words that describe it.
+ */
+function sceneClock(beat: PlannedBeat, local: number): number {
+  const script = DEMO_BEATS.find((b) => b.id === beat.id)!;
+  const from = [0, ...beat.lines.map((l) => l.at), beat.seconds];
+  const to = [0, ...script.lines.map((l) => l.at), script.seconds];
+  return interpolate(local, from, to, CLAMP);
+}
+
+const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const local = frame / fps;
   const Scene = SCENES[beat.id];
   return (
     <AbsoluteFill>
-      <Scene local={local} />
+      <Scene local={sceneClock(beat, local)} />
       <Captions cues={beat.lines} local={local} box={CAPTION_BOX} fontSize={42} />
     </AbsoluteFill>
   );
