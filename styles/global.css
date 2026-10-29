@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/*
+ * Prayog Studio palette: "chalkboard at night".
+ * Each physical quantity has one colour in every scene. Colours come from the
+ * Okabe-Ito colour-blind-safe set, lightened slightly to read on the dark board.
+ * Colour is never the only cue: arrows also carry a label and their own arrowhead style.
+ */
+:root {
+  --board: #0f1915;
+  --board-raised: #16231e;
+  --board-line: #24362f;
+  --chalk: #eeeee6;
+  --chalk-dim: #a9b4ae;
+
+  --q-velocity: #56b4e9;
+  --q-acceleration: #e69f00;
+  --q-force: #d98cc0;
+  --q-displacement: #f0e442;
+}
+
+@theme {
+  --color-board: var(--board);
+  --color-board-raised: var(--board-raised);
+  --color-board-line: var(--board-line);
+  --color-chalk: var(--chalk);
+  --color-chalk-dim: var(--chalk-dim);
+  --color-velocity: var(--q-velocity);
+  --color-acceleration: var(--q-acceleration);
+  --color-force: var(--q-force);
+  --color-displacement: var(--q-displacement);
+}
+
+html,
+body {
+  background: var(--board);
+  color: var(--chalk);
+}
