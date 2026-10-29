@@ -69,7 +69,7 @@ function findVoice(lang) {
   const voice = {};
   if (BEATS === "per-line") {
     const dir = path.join(root, "public", folder);
-    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp3")) : [];
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp3") || f.endsWith(".wav")) : [];
     for (const f of files) voice[f.slice(0, -4)] = { src: `${folder}/${f}`, seconds: audioSeconds(path.join(dir, f)) };
     return voice;
   }

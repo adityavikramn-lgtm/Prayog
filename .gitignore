@@ -42,3 +42,7 @@ build
 !.env.example
 renders/
 node_modules/
+
+# Generated voice clips (re-make with npm run voice)
+public/voice/**/*.wav
+public/voice/**/*.mp3
