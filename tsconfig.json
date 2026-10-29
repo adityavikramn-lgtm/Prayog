@@ -24,6 +24,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.mts",
     ".next/types/**/*.ts",
     "src/remotion/webpack-override.mjs",
     ".next/dev/types/**/*.ts"

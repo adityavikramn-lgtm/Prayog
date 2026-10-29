@@ -60,7 +60,8 @@
     "render:explainer": "node scripts/render.mjs explainer",
     "render:demo": "node scripts/render.mjs demo",
     "stats": "node scripts/stats.mjs",
-    "voice": "tsx scripts/voice.mts"
+    "voice": "tsx scripts/voice.mts",
+    "notes": "tsx scripts/notes.mts"
   },
   "allowScripts": {
     "esbuild": false

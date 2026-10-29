@@ -119,6 +119,9 @@ async function makeVoice(template: string) {
   console.log(`\nDone. Now render: npm run render:explainer -- ${template}`);
 }
 
-if (command === "voices") await listVoices();
-else if (command) await makeVoice(command);
-else fail("Usage: npm run voice -- <hemisphere|voices> [--dry-run] [--force]");
+async function main() {
+  if (command === "voices") await listVoices();
+  else if (command) await makeVoice(command);
+  else fail(`Usage: npm run voice -- <${Object.keys(NARRATION).join("|")}|voices> [--dry-run] [--force] [--engine=windows]`);
+}
+void main();
