@@ -26,21 +26,10 @@ import { PlannedBeat, Voice, planCoulomb } from "./plan";
 import { BEATS, BeatId, CARDS, LAW_R_CLOSE, Lang, fill, scriptValues } from "./script";
 import { ReleaseSample, sampleRelease, simulateRelease } from "./simulate";
 
-const BEAT_IDS = [
-  "hook",
-  "charges",
-  "law",
-  "third",
-  "release",
-  "superposition",
-  "predict",
-  "reveal",
-  "cta",
-] as const satisfies readonly BeatId[];
-
 export const CoulombExplainerProps = z.object({
   lang: z.enum(["en", "hi"]),
-  voice: z.partialRecord(z.enum(BEAT_IDS), z.object({ src: z.string(), seconds: z.number().positive() })),
+  /** One clip per caption line, keyed "beat-index" (e.g. "law-2"). */
+  voice: z.record(z.string(), z.object({ src: z.string(), seconds: z.number().positive() })),
 });
 export type CoulombExplainerProps = z.infer<typeof CoulombExplainerProps>;
 
@@ -71,11 +60,14 @@ export const CoulombExplainer: React.FC<CoulombExplainerProps> = ({ lang, voice 
       {plan.beats.map((beat) => {
         const from = Math.round(beat.from * fps);
         const to = Math.round((beat.from + beat.seconds) * fps);
-        const clip = voice[beat.id];
         return (
           <Sequence key={beat.id} name={beat.id} from={from} durationInFrames={to - from}>
             <BeatView ctx={{ lang, values, beat }} />
-            {clip && <Audio src={staticFile(clip.src)} />}
+            {beat.clips.map((c) => (
+              <Sequence key={c.key} from={Math.round(c.at * fps)} layout="none">
+                <Audio src={staticFile(c.clip.src)} playbackRate={c.rate} />
+              </Sequence>
+            ))}
           </Sequence>
         );
       })}

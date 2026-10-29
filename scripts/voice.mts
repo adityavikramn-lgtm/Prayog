@@ -16,7 +16,20 @@ import { config } from "dotenv";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { BEATS, lineKey, scriptValues, spokenText } from "../src/templates/hemisphere/script";
+import * as coulomb from "../src/templates/coulomb/script";
+import * as hemisphere from "../src/templates/hemisphere/script";
+
+/** Every video that has an English narration: one { key, say } per caption line. */
+const NARRATION: Record<string, () => { key: string; say: string }[]> = {
+  hemisphere: () => {
+    const values = hemisphere.scriptValues();
+    return hemisphere.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: hemisphere.lineKey(b.id, i), say: hemisphere.spokenText(line, values) })));
+  },
+  coulomb: () => {
+    const values = coulomb.spokenValues();
+    return coulomb.BEATS.flatMap((b) => b.lines.map((_, i) => ({ key: coulomb.lineKey(b.id, i), say: coulomb.spokenEn(b.id, i, values) })));
+  },
+};
 
 config({ path: ".env.local", quiet: true });
 
@@ -49,9 +62,9 @@ async function listVoices() {
 }
 
 async function makeVoice(template: string) {
-  if (template !== "hemisphere") fail(`No narration script for "${template}" yet. Try: hemisphere`);
-  const values = scriptValues();
-  const lines = BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: lineKey(b.id, i), say: spokenText(line, values) })));
+  const source = NARRATION[template];
+  if (!source) fail(`No narration script for "${template}" yet. Try: ${Object.keys(NARRATION).join(", ")}`);
+  const lines = source();
   const outDir = path.join("public", "voice", `${template}-explainer-en`);
   const ext = engine === "windows" ? "wav" : "mp3";
   const todo = lines.filter((l) => force || !fs.existsSync(path.join(outDir, `${l.key}.${ext}`)));

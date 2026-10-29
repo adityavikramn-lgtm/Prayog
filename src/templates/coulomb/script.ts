@@ -9,6 +9,7 @@ import {
   triangleNetForce,
 } from "./model";
 import { coulombForce, K_JEE } from "../../physics/coulomb";
+import { spokenDisplay } from "../../video/spoken";
 
 /**
  * Words for the Coulomb's law explainer (16:9, about 4 min 50 s).
@@ -50,7 +51,7 @@ const l = (at: number, en: string, hi: string): Line => ({ at, en, hi });
 export const BEATS: Beat[] = [
   {
     id: "hook",
-    seconds: 14,
+    seconds: 15.5,
     lines: [
       l(0.3, "Two Kans. Same charge. Nobody is touching them.", "Do Kan. Same charge. Koi unhe chhoo bhi nahi raha."),
       l(4.5, "And still they fly apart. Something is pushing.", "Phir bhi dono door bhaag rahe hain. Koi toh push kar raha hai."),
@@ -185,4 +186,51 @@ export function fill(text: string, values: Record<string, string>): string {
     if (!(key in values)) throw new Error(`Script placeholder {{${key}}} has no value`);
     return values[key];
   });
+}
+
+/** Every number again, written as words for the voice ({{lawFSay}} → "sixty"). */
+export function spokenValues(): Record<string, string> {
+  const v = scriptValues();
+  return { ...v, ...Object.fromEntries(Object.entries(v).map(([k, s]) => [`${k}Say`, spokenDisplay(s)])) };
+}
+
+/**
+ * What the English voice reads for each caption line, keyed "beat-index".
+ * Lines not listed are read as their caption. Symbols and units are written
+ * out for the ear, and the on-screen question cards are read aloud too.
+ */
+export const SAY_EN: Record<string, string> = {
+  "charges-3": "Charge also comes in packets. The smallest one is e, one point six times ten to the power minus nineteen coulombs.",
+  "charges-4": "So every charge is a whole number of packets. q equals n e. You never get half an electron.",
+  "law-1": "F equals k, q one, q two, over r squared. For JEE, k is nine times ten to the power nine.",
+  "law-2": "Try it. {{lawQ1Say}} micro coulombs and {{lawQ2Say}} micro coulombs, {{lawRSay}} centimetres apart. That's {{lawFSay}} newtons.",
+  "law-3": "Now Kan grabs the r, and pulls.",
+  "law-4": "Double the distance. The force doesn't halve. It drops to a quarter, {{lawF2Say}} newtons.",
+  "law-5": "That square on r is why far-away charges barely notice each other.",
+  "law-6": "Bring them closer instead, and the force shoots up. {{lawFcloseSay}} newtons at {{lawRcloseSay}} centimetres.",
+  "third-0": "Quick trap. The four micro coulomb charge is bigger. Does it push harder?",
+  "third-1": "No. Both feel exactly {{thirdFSay}} newtons, just in opposite directions.",
+  "third-2": "The formula has q one q two for both of them. Same product, same force. That's Newton's third law.",
+  "release-0": "Now let's let go. Two Kans, one micro coulomb and ten grams each, starting ten centimetres apart.",
+  "release-3": "At thirty centimetres, each one moves at {{v30Say}} metres per second. The energy formula gives root six, the same number.",
+  "release-4": "Even infinitely far away, they'd never beat {{vinfSay}} metres per second. The stored energy is all used up.",
+  "superposition-0": "Three charges now, one micro coulomb each, on a triangle with ten centimetre sides.",
+  "superposition-1": "The top one gets pushed by both of the others. Each push is {{pairFSay}} newtons.",
+  "superposition-4": "Net force: zero point nine root three, which is about {{netFSay}} newtons, straight up.",
+  "predict-0":
+    "Your turn. A plus two micro coulomb charge and a plus eight micro coulomb charge sit thirty centimetres apart. Where between them is the net force on a test charge zero? Pause the video and work it out.",
+  "reveal-1": "Near the two micro coulomb charge, it gets pushed right. Near the eight micro coulomb charge, left.",
+  "reveal-2": "Somewhere in between, the pushes cancel. {{xNullSay}} centimetres from the two micro coulomb charge.",
+  "reveal-3": "Check it. Two over x squared equals eight over thirty minus x, all squared. That means thirty minus x equals two x, so x is ten centimetres.",
+  "cta-0":
+    "Recap. Likes repel, opposites attract, the force falls off as r squared, and forces add as vectors. And one for the comments: double both charges, and double the distance too. What happens to the force?",
+};
+
+/** Voice clip key for a line, e.g. "law-2". */
+export const lineKey = (beat: BeatId, index: number) => `${beat}-${index}`;
+
+/** The English words the voice reads for one line (no $, braces or symbols). */
+export function spokenEn(beat: BeatId, index: number, values: Record<string, string>): string {
+  const line = BEATS.find((b) => b.id === beat)!.lines[index];
+  return fill(SAY_EN[lineKey(beat, index)] ?? line.en, values);
 }

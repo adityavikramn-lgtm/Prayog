@@ -3,7 +3,18 @@ import { DEMO_BEATS, demoSeconds } from "../src/pitch/script";
 import { K_JEE, coulombForce } from "../src/physics/coulomb";
 import { SETUPS, nullPointFromQ1, releaseAt, triangleNetForce } from "../src/templates/coulomb/model";
 import { planCoulomb } from "../src/templates/coulomb/plan";
-import { BEATS, CARDS, EXACT, LAW_R_CLOSE, fill, scriptValues } from "../src/templates/coulomb/script";
+import {
+  BEATS,
+  CARDS,
+  EXACT,
+  LAW_R_CLOSE,
+  SAY_EN,
+  fill,
+  lineKey,
+  scriptValues,
+  spokenEn,
+  spokenValues,
+} from "../src/templates/coulomb/script";
 
 const values = scriptValues();
 const texts = [...BEATS.flatMap((b) => b.lines), ...Object.values(CARDS)];
@@ -72,10 +83,41 @@ describe("Coulomb explainer script", () => {
     }
   });
 
-  it("a voiceover clip stretches only its own beat", () => {
-    const base = planCoulomb().seconds;
-    const voiced = planCoulomb({ law: { src: "voice/x/law.mp3", seconds: 70 } }).seconds;
-    expect(voiced - base).toBeCloseTo(70.5 - 58, 9);
+  it("voice clips start with their captions and never run into the next line", () => {
+    const voice = { "law-2": { src: "x.wav", seconds: 9 }, "hook-0": { src: "x.wav", seconds: 2 } };
+    const plan = planCoulomb(voice);
+    expect(plan.seconds).toBeCloseTo(planCoulomb().seconds, 9); // the animation timing never changes
+    const law = plan.beats.find((b) => b.id === "law")!;
+    const clip = law.clips[0];
+    const script = BEATS.find((b) => b.id === "law")!;
+    expect(clip.at).toBe(script.lines[2].at);
+    expect(clip.at + clip.clip.seconds / clip.rate).toBeLessThanOrEqual(script.lines[3].at);
+    expect(plan.beats.find((b) => b.id === "hook")!.clips[0].rate).toBe(1); // short clips play at normal speed
+  });
+
+  it("the voice reads words, not symbols, for every line", () => {
+    const spoken = spokenValues();
+    BEATS.forEach((b) =>
+      b.lines.forEach((l, i) => {
+        const say = spokenEn(b.id, i, spoken);
+        expect(say).not.toMatch(/[$\\{}^_µ]/);
+        if (/[$µ]|\{\{/.test(l.en)) expect(SAY_EN[lineKey(b.id, i)], `${lineKey(b.id, i)} needs a spoken version`).toBeDefined();
+      }),
+    );
+    for (const key of Object.keys(SAY_EN)) {
+      const [beat, i] = key.split("-");
+      expect(BEATS.find((b) => b.id === beat)?.lines[Number(i)], `${key} is not a caption line`).toBeDefined();
+    }
+  });
+
+  it("spoken numbers match the numbers on screen", () => {
+    const s = spokenValues();
+    expect(s.lawFSay).toBe("sixty");
+    expect(s.lawFcloseSay).toBe("one hundred thirty-five");
+    expect(s.thirdFSay).toBe("zero point four");
+    expect(s.v30Say).toBe("two point four five");
+    expect(s.netFSay).toBe("one point five six");
+    expect(s.xNullSay).toBe("ten");
   });
 });
 

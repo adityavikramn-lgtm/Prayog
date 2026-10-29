@@ -27,7 +27,7 @@ const CATALOG = {
   },
   coulomb: {
     formats: ["explainer"],
-    beats: ["hook", "charges", "law", "third", "release", "superposition", "predict", "reveal", "cta"],
+    beats: "per-line", // one clip per caption line, made by `npm run voice -- coulomb`
     langs: ["en", "hi"],
   },
   teacher: { formats: ["demo"], beats: [], langs: ["en"] },
