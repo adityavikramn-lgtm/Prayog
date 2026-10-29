@@ -22,7 +22,7 @@ import { Beat, BeatId, DEMO_BEATS, demoSeconds } from "./script";
 export { demoSeconds };
 
 /**
- * "How a JEE teacher uses Prayog Studio": the pitch video for the application.
+ * "How a JEE teacher can use AI content": the pitch video for the application (no product name on screen).
  * Every scene shown here is the real component, every number is computed or
  * read from the real test and render results (src/generated/*.json).
  */
@@ -106,7 +106,7 @@ const Open: React.FC<SceneProps> = ({ local }) => (
   <>
     <div style={{ position: "absolute", left: 140, top: 250, opacity: fade(local, 0.1, 0.5) }}>
       <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR JEE TEACHERS</div>
-      <div style={{ fontSize: 130, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>Prayog Studio</div>
+      <div style={{ fontSize: 130, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>{NAME}</div>
       <div style={{ fontSize: 50, color: COLORS.displacement, marginTop: 24, maxWidth: 980 }}>
         AI-assisted lessons, checked by real physics.
       </div>
@@ -368,7 +368,7 @@ const Close: React.FC<SceneProps> = ({ local }) => (
       <div style={{ fontSize: 40, color: COLORS.chalkDim }}>Made by</div>
       <div style={{ fontSize: 110, fontWeight: 700, marginTop: 10 }}>{NAME}</div>
       <div style={{ fontSize: 44, color: COLORS.displacement, marginTop: 20 }}>for the Vedantu JEE content role</div>
-      <div style={{ fontSize: 30, color: COLORS.chalkDim, marginTop: 30 }}>Prayog Studio · built for JEE teachers · all content original</div>
+      <div style={{ fontSize: 30, color: COLORS.chalkDim, marginTop: 30 }}>Built for JEE teachers · all content original</div>
     </div>
     <div style={{ position: "absolute", left: 1500, top: 560, opacity: fade(local, 0.8, 0.5) }}>
       <Kan radius={70} expression="proud" arms="out" look={{ x: -1, y: -0.2 }} time={local} />
@@ -391,11 +391,10 @@ export const TeacherDemoCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
     <div style={{ position: "absolute", left: 120, top: 250 }}>
       <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR JEE TEACHERS</div>
-      <div style={{ fontSize: 120, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>Prayog Studio</div>
+      <div style={{ fontSize: 120, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>{NAME}</div>
       <div style={{ fontSize: 52, color: COLORS.displacement, marginTop: 24, maxWidth: 1000 }}>
         AI content that's checked by real physics
       </div>
-      <div style={{ fontSize: 36, color: COLORS.chalkDim, marginTop: 40 }}>{NAME}</div>
     </div>
     <div style={{ position: "absolute", left: 1350, top: 300 }}>
       <Kan radius={120} expression="excited" arms="out" look={{ x: -1, y: 0 }} time={0.4} />

@@ -22,7 +22,7 @@ export const ProjectileCover: React.FC<ProjectileCoverProps> = ({ format, lang }
 
 const Brand: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
   <div style={{ position: "absolute", fontSize: 34, color: COLORS.chalkDim, letterSpacing: 2, ...style }}>
-    PRAYOG STUDIO
+    ADITHYA VIKRAM
   </div>
 );
 

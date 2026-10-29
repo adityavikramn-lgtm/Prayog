@@ -705,7 +705,7 @@ export const CoulombCover: React.FC<{ lang: Lang }> = ({ lang }) => {
         </div>
       </div>
       <div style={{ position: "absolute", left: 90, top: 900, fontSize: 34, color: COLORS.chalkDim, letterSpacing: 2 }}>
-        PRAYOG STUDIO
+        ADITHYA VIKRAM
       </div>
     </AbsoluteFill>
   );
