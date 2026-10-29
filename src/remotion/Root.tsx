@@ -1,4 +1,13 @@
 import { CalculateMetadataFunction, Composition, Still } from "remotion";
+import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds } from "../pitch/TeacherDemo";
+import {
+  COULOMB_FPS,
+  CoulombCover,
+  CoulombCoverProps,
+  CoulombExplainer,
+  CoulombExplainerProps,
+  coulombMetadata,
+} from "../templates/coulomb/Explainer";
 import { ProjectileCover, ProjectileCoverProps } from "../templates/projectile/Cover";
 import {
   ProjectileScene,
@@ -63,6 +72,36 @@ export const RemotionRoot: React.FC = () => {
         height={1920}
         defaultProps={{ format: "short" as const, lang: "en" as const }}
       />
+      <Composition
+        id="coulomb-explainer"
+        component={CoulombExplainer}
+        schema={CoulombExplainerProps}
+        durationInFrames={300}
+        fps={COULOMB_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={coulombMetadata}
+      />
+      <Still
+        id="coulomb-explainer-cover"
+        component={CoulombCover}
+        schema={CoulombCoverProps}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const }}
+      />
+      <Composition
+        id="teacher-demo"
+        component={TeacherDemo}
+        schema={TeacherDemoProps}
+        durationInFrames={Math.round(demoSeconds() * DEMO_FPS)}
+        fps={DEMO_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const }}
+      />
+      <Still id="teacher-demo-cover" component={TeacherDemoCover} width={1920} height={1080} />
       <Still
         id="projectile-explainer-cover"
         component={ProjectileCover}

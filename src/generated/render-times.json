@@ -1,0 +1,30 @@
+{
+  "coulomb-explainer-en": {
+    "videoSeconds": 292,
+    "renderSeconds": 157
+  },
+  "coulomb-explainer-hi": {
+    "videoSeconds": 292,
+    "renderSeconds": 154
+  },
+  "projectile-short-en": {
+    "videoSeconds": 36.3,
+    "renderSeconds": 20
+  },
+  "projectile-short-hi": {
+    "videoSeconds": 36.3,
+    "renderSeconds": 20
+  },
+  "projectile-explainer-en": {
+    "videoSeconds": 61.1,
+    "renderSeconds": 34
+  },
+  "projectile-explainer-hi": {
+    "videoSeconds": 61.1,
+    "renderSeconds": 34
+  },
+  "teacher-demo-en": {
+    "videoSeconds": 153,
+    "renderSeconds": 86
+  }
+}

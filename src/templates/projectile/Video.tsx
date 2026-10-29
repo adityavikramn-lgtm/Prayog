@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import {
   AbsoluteFill,
   CalculateMetadataFunction,
-  Easing,
   Sequence,
   interpolate,
   staticFile,
@@ -53,6 +52,7 @@ import {
   scriptValues,
 } from "./script";
 import { sweepAt } from "./timeline";
+import { CLAMP, Captions, Card as SharedCard, fade } from "../../video/ui";
 import { BOXES } from "./videoLayout";
 import { PlannedBeat, Voice, cueSeconds, planBeats } from "./videoPlan";
 import { LANDSCAPE, Layout, PORTRAIT, SHORTS_SAFE, World, makeWorld } from "./world";
@@ -73,9 +73,6 @@ export const videoMetadata: CalculateMetadataFunction<ProjectileVideoProps> = ({
   durationInFrames: Math.round(planBeats(props.format, props.voice as Voice).seconds * VIDEO_FPS),
 });
 
-const CLAMP = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-const fade = (t: number, start: number, length = 0.25) =>
-  interpolate(t, [start, start + length], [0, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
 
 interface Ctx {
   format: Format;
@@ -145,37 +142,22 @@ const BeatView: React.FC<{ ctx: Ctx }> = ({ ctx }) => {
           scale={layout.textScale}
         />
       )}
-      <Captions ctx={ctx} local={local} />
+      <BeatCaptions ctx={ctx} local={local} />
     </AbsoluteFill>
   );
 };
 
 /** The caption for the latest cue that has started. */
-const Captions: React.FC<{ ctx: Ctx; local: number }> = ({ ctx, local }) => {
+const BeatCaptions: React.FC<{ ctx: Ctx; local: number }> = ({ ctx, local }) => {
   const cues = SCRIPT[ctx.format].find((b) => b.id === ctx.beat.id)!.cues;
-  const started = cues.map((c) => ({ c, at: cueSeconds(c.at, ctx.beat) })).filter((x) => x.at <= local);
-  const active = started[started.length - 1];
-  if (!active) return null;
   const box = BOXES[ctx.format];
   return (
-    <div style={{ position: "absolute", ...box.caption, display: "flex", justifyContent: "center" }}>
-      <div
-        style={{
-          opacity: fade(local, active.at),
-          translate: `0 ${(1 - fade(local, active.at)) * 16}px`,
-          fontSize: box.captionFont,
-          lineHeight: 1.25,
-          fontWeight: 700,
-          textAlign: "center",
-          padding: "12px 24px",
-          borderRadius: 18,
-          background: "rgba(22, 35, 30, 0.94)",
-          border: `2px solid ${COLORS.boardLine}`,
-        }}
-      >
-        <RichText text={fill(active.c[ctx.lang], ctx.values)} />
-      </div>
-    </div>
+    <Captions
+      cues={cues.map((c) => ({ at: cueSeconds(c.at, ctx.beat), text: fill(c[ctx.lang], ctx.values) }))}
+      local={local}
+      box={box.caption}
+      fontSize={box.captionFont}
+    />
   );
 };
 
@@ -188,26 +170,17 @@ const Card: React.FC<{ ctx: Ctx; opacity: number; children: React.ReactNode; fon
 }) => {
   const box = BOXES[ctx.format];
   return (
-    <div
+    <SharedCard
+      opacity={opacity}
+      fontSize={fontSize ?? box.cardFont}
       style={{
-        position: "absolute",
         ...box.card,
         ...(top !== undefined ? { top } : {}),
-        opacity,
-        scale: String(0.94 + 0.06 * opacity),
-        padding: "22px 30px",
-        borderRadius: 22,
-        background: COLORS.boardRaised,
-        border: `2px solid ${COLORS.boardLine}`,
-        fontSize: fontSize ?? box.cardFont,
-        fontWeight: 700,
-        lineHeight: 1.25,
-        textAlign: "center",
         maxWidth: ctx.format === "explainer" ? 900 : undefined,
       }}
     >
       {children}
-    </div>
+    </SharedCard>
   );
 };
 

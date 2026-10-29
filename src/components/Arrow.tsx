@@ -1,7 +1,7 @@
 import React from "react";
 import { COLORS } from "../theme";
 
-export type ArrowHead = "triangle" | "open" | "double-chevron" | "bars";
+export type ArrowHead = "triangle" | "open" | "open-triangle" | "double-chevron" | "bars";
 
 export interface ArrowProps {
   x1: number;
@@ -43,7 +43,7 @@ export const Arrow: React.FC<ArrowProps> = ({
   const uy = dy / length;
   const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
   const headLen = head === "bars" ? 0 : Math.min(22, length * 0.45);
-  const shaftEnd = head === "triangle" ? headLen * 0.8 : 0;
+  const shaftEnd = head === "triangle" || head === "open-triangle" ? headLen : 0;
 
   const labelPos =
     labelAt === "tip"
@@ -67,6 +67,9 @@ export const Arrow: React.FC<ArrowProps> = ({
           <path d={`M 0 0 L ${-headLen} ${-headLen * 0.5} L ${-headLen} ${headLen * 0.5} Z`} fill={color} />
         )}
         {head === "open" && <path d={`M ${-headLen} ${-headLen * 0.5} L 0 0 L ${-headLen} ${headLen * 0.5}`} />}
+        {head === "open-triangle" && (
+          <path d={`M 0 0 L ${-headLen} ${-headLen * 0.55} L ${-headLen} ${headLen * 0.55} Z`} fill={COLORS.board} />
+        )}
         {head === "double-chevron" && (
           <>
             <path d={`M ${-headLen * 0.8} ${-headLen * 0.5} L 0 0 L ${-headLen * 0.8} ${headLen * 0.5}`} />

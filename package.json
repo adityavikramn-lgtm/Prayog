@@ -56,7 +56,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "render:short": "node scripts/render.mjs short",
-    "render:explainer": "node scripts/render.mjs explainer"
+    "render:explainer": "node scripts/render.mjs explainer",
+    "render:demo": "node scripts/render.mjs demo",
+    "stats": "node scripts/stats.mjs"
   },
   "allowScripts": {
     "esbuild": false

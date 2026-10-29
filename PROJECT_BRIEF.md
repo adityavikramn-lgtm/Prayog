@@ -11,8 +11,8 @@ AUDIENCE       = JEE Main + JEE Advanced aspirants (Class 11-12)
 LANGUAGE       = English captions + Hinglish toggle (Hindi-English mix in Roman script)
 PROJECT_NAME   = Prayog Studio   # "prayog" = experiment; rename if you like
 MASCOT_NAME    = Kan             # from "kan" (कण) = particle; rename if you like
-MY_NAME        = ____________    # shown in the footer and the pitch
-CURRENT_TOPICS = ____________    # chapters the teacher is teaching right now (optional)
+MY_NAME        = Adithya Vikram  # shown in the footer and the pitch
+CURRENT_TOPICS = Electrostatics (Coulomb's law)  # from the reference class: Class 12, JEE 2026
 
 ```
 

@@ -16,6 +16,8 @@ export interface KanProps {
   arms?: KanArms;
   /** Seconds; drives the orbiting dot and dizzy stars. Pure function of time. */
   time?: number;
+  /** Electric charge sign shown as a badge (a symbol, so it never relies on colour). */
+  badge?: "+" | "−";
 }
 
 const INK = "#14211c";
@@ -37,6 +39,7 @@ export const Kan: React.FC<KanProps> = ({
   squashOrigin = "center",
   arms = "none",
   time = 0,
+  badge,
 }) => {
   const size = (radius / 60) * 200;
   const len = Math.hypot(look.x, look.y) || 1;
@@ -85,6 +88,17 @@ export const Kan: React.FC<KanProps> = ({
         <g transform="rotate(-18)">
           {dotInFront && <circle cx={dotX} cy={dotY} r={7} fill={ACCENT} />}
         </g>
+        {badge && (
+          <g transform="translate(44 -48)">
+            <circle r={22} fill={INK} stroke={BODY_LIGHT} strokeWidth={4} />
+            <path
+              d={badge === "+" ? "M -11 0 H 11 M 0 -11 V 11" : "M -11 0 H 11"}
+              stroke={BODY_LIGHT}
+              strokeWidth={6}
+              strokeLinecap="round"
+            />
+          </g>
+        )}
       </g>
     </svg>
   );

@@ -26,11 +26,18 @@
 - `npm run render:short -- projectile` / `render:explainer` → `renders/` (en + hi MP4 + cover PNG), H.264 yuv420p. All four videos render in about 2 minutes.
 - Tests (127): script complete in both languages, Roman-script Hinglish, placeholders filled, captions short enough for 3 lines, physics claims (complementary angles, sin 60° = sin 120°, 45° max), Short 30–45 s / explainer 60–90 s, beat and event order, voiceover stretching, Short text boxes inside the safe area.
 
+### Application videos (2026-10-29), done ahead of Phase 3 at the user's request
+- References checked: "Animation vs. Physics" (idea only) and a Vedantu JEE English class on Electrostatics / Coulomb's force, so CURRENT_TOPICS = Electrostatics and Coulomb's law was pulled forward from Phase 4.
+- Coulomb engine: `src/physics/coulomb.ts` (k = 9×10⁹, e = 1.6×10⁻¹⁹ JEE values; force, superposition, release speeds, null point), `src/templates/coulomb/simulate.ts` (independent RK4 of two released charges), `model.ts` (all video setups), tests: inverse square, third law, triangle 0.9√3 N, null point 10 cm (closed form + bisection), 40 random release cases (energy formula vs RK4, momentum = 0), energy conserved along drawn samples.
+- `coulomb-explainer` (16:9, 4 min 52 s, en + hi): hook → charges → law (Kan drags r, live F–r graph) → third law → released from rest (live RK4 vs energy formula, KE/U bars) → superposition (head-to-tail vectors) → pause & predict → reveal (test charge finds the null point) → recap/CTA. Plus cover.
+- `teacher-demo` (16:9, 2 min 33 s, English): the pitch. Problem (a real AI-style slip vs the checked answer) → "AI for language, code for truth" → templates for Vedantu JEE teachers (real scenes playing live; DPP and paste-a-question clearly marked "coming next, not built yet") → 4-step workflow (live formula vs RK4 check) → proof numbers read from `src/generated/stats.json` (`npm run stats`) and `render-times.json` (written by the render script) → weekly offer → "Made by Adithya Vikram for the Vedantu JEE content role". Vedantu appears as text only; no logo, colours or copied layouts; no teacher named.
+- Shared video UI (`src/video/ui.tsx`), Kan +/− charge badge, open-triangle force arrowheads.
+
 ## Next
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
+- A Coulomb lab page (`/lab/coulomb`) and a Coulomb Short.
 
 ## Known issues / open questions
-- `MY_NAME` and `CURRENT_TOPICS` in PROJECT_BRIEF.md section 0 are still blank.
 - Hinglish lines are a draft; a Hindi-speaking teacher should review them before publishing.
 - Shorts safe-zone margins are common practice (YouTube publishes no exact sizes).
 - Remotion warns that it expects zod 4.5.4 exactly; we force 4.6.7 (security fix). Studio and all renders work.

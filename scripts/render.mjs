@@ -5,6 +5,8 @@
 //   npm run render:short -- projectile --lang=en          (one language)
 //   npm run render:short -- projectile --frames=0,300     (PNG check frames only)
 //   npm run render:short -- projectile --safe-zones       (draw the Shorts safe area)
+//   npm run render:explainer -- coulomb
+//   npm run render:demo -- teacher                        (the teacher demo / pitch video)
 //
 // Voiceover: put one MP3 per beat in public/voice/<template>-<format>-<lang>/<beat>.mp3
 // (beats: hook, concept, demo, sweep, predict, reveal, cta). Missing files = captions only.
@@ -16,18 +18,34 @@ import fs from "node:fs";
 import path from "node:path";
 import { webpackOverride } from "../src/remotion/webpack-override.mjs";
 
-const FORMATS = ["short", "explainer"];
-const TEMPLATES = ["projectile"];
-const BEATS = ["hook", "concept", "demo", "sweep", "predict", "reveal", "cta"];
+// What exists: template → formats, the beats that can take a voiceover, and the languages.
+const CATALOG = {
+  projectile: {
+    formats: ["short", "explainer"],
+    beats: ["hook", "concept", "demo", "sweep", "predict", "reveal", "cta"],
+    langs: ["en", "hi"],
+  },
+  coulomb: {
+    formats: ["explainer"],
+    beats: ["hook", "charges", "law", "third", "release", "superposition", "predict", "reveal", "cta"],
+    langs: ["en", "hi"],
+  },
+  teacher: { formats: ["demo"], beats: [], langs: ["en"] },
+};
 
 const [format, template, ...flags] = process.argv.slice(2);
-if (!FORMATS.includes(format) || !TEMPLATES.includes(template)) {
-  console.error(`Usage: npm run render:<${FORMATS.join("|")}> -- <${TEMPLATES.join("|")}> [--lang=en|hi] [--frames=0,300] [--safe-zones]`);
+const entry = CATALOG[template];
+if (!entry || !entry.formats.includes(format)) {
+  const options = Object.entries(CATALOG)
+    .map(([t, e]) => `${e.formats.map((f) => `render:${f} -- ${t}`).join(", ")}`)
+    .join("; ");
+  console.error(`Not available: ${format} for ${template}. Try: ${options}`);
   process.exit(1);
 }
+const BEATS = entry.beats;
 const flag = (name) => flags.find((f) => f === `--${name}` || f.startsWith(`--${name}=`));
 const flagValue = (name) => flag(name)?.split("=")[1];
-const langs = flagValue("lang") ? [flagValue("lang")] : ["en", "hi"];
+const langs = flagValue("lang") ? [flagValue("lang")] : entry.langs;
 const frames = flagValue("frames")?.split(",").map(Number);
 const showSafeZones = Boolean(flag("safe-zones"));
 
@@ -55,6 +73,15 @@ function findVoice(lang) {
   return voice;
 }
 
+/** Real render timings, read by the pitch video (src/generated/render-times.json). */
+function recordRenderTime(name, timing) {
+  const file = path.join(root, "src", "generated", "render-times.json");
+  const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+  all[name] = { videoSeconds: Number(timing.videoSeconds.toFixed(1)), renderSeconds: Math.round(timing.renderSeconds) };
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(all, null, 2) + "\n");
+}
+
 console.log("Bundling the project (one time)…");
 const serveUrl = await bundle({ entryPoint: path.join(root, "src/remotion/index.ts"), webpackOverride });
 
@@ -79,6 +106,7 @@ for (const lang of langs) {
 
   const output = path.join(outDir, `${name}.mp4`);
   let last = -1;
+  const started = Date.now();
   await renderMedia({
     composition,
     serveUrl,
@@ -96,7 +124,10 @@ for (const lang of langs) {
       }
     },
   });
-  console.log(`\n  video → ${path.relative(root, output)} (${(composition.durationInFrames / composition.fps).toFixed(1)} s)`);
+  const renderSeconds = (Date.now() - started) / 1000;
+  const videoSeconds = composition.durationInFrames / composition.fps;
+  console.log(`\n  video → ${path.relative(root, output)} (${videoSeconds.toFixed(1)} s, rendered in ${renderSeconds.toFixed(0)} s)`);
+  recordRenderTime(name, { videoSeconds, renderSeconds });
 
   const coverProps = { format, lang };
   const cover = await selectComposition({ serveUrl, id: `${id}-cover`, inputProps: coverProps });
