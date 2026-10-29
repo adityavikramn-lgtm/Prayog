@@ -17,16 +17,19 @@ import { simulateDrag } from "./simulate";
 export type BeatId =
   | "question"
   | "givens"
+  | "approach"
   | "work"
   | "forces"
   | "slowly"
   | "geometry"
-  | "components"
+  | "trig"
+  | "resolve"
   | "balance"
   | "setup"
   | "integrate"
   | "answer"
   | "meaning"
+  | "energy"
   | "example"
   | "traps"
   | "recap";
@@ -75,6 +78,24 @@ export const BEATS: Beat[] = [
       line("The surface is rough, with friction coefficient $\\mu$.", { say: "The surface is rough, with friction coefficient mu.", math: "\\mu = \\text{coefficient of friction}", reveal: ["mu"] }),
       line("The block moves slowly. Remember this word. It's going to do a lot of the work for us.", { math: "\\text{moves slowly}" }),
       line("And we want one thing: the work done by the person.", { math: "\\text{Find: } W_{\\text{person}}" }),
+    ],
+  },
+  {
+    id: "approach",
+    title: "How to attack it",
+    lines: [
+      line("Before any maths, let's plan how to attack this question. This is the part most people skip."),
+      line("We want the work done by the person's pull. Work is force times distance, so first we need to know how big that pull is at every point.", {
+        math: "\\text{Need: the pull } T \\text{ at every point}",
+      }),
+      line("Step one: draw every force acting on the block.", { math: "\\text{1. Draw every force on the block}" }),
+      line("Step two: use the word slowly. It tells us the forces balance, and balancing them gives us the pull.", {
+        math: "\\text{2. Slowly} \\Rightarrow \\text{forces balance} \\Rightarrow T",
+      }),
+      line("Step three: the pull changes along the path, so we add up its work in tiny pieces. That's an integral.", {
+        math: "\\text{3. Add up tiny pieces: } W = \\int T\\,ds",
+      }),
+      line("And step four: at the end, we'll check the answer a completely different way, using energy.", { math: "\\text{4. Check the answer with energy}" }),
     ],
   },
   {
@@ -161,30 +182,81 @@ export const BEATS: Beat[] = [
     ],
   },
   {
-    id: "components",
+    id: "trig",
+    title: "Splitting any force",
+    lines: [
+      line("Before we split the weight, a quick refresher on splitting a force. If you already know this, it's a good warm-up."),
+      line("Take a force $F$, drawn as an arrow, and a line that makes an angle $\\theta$ with it.", {
+        say: "Take a force, F, drawn as an arrow, and a line that makes an angle theta with it.",
+        reveal: ["arrow"],
+      }),
+      line("From the tip of the arrow, drop a perpendicular onto the line. Now the force is split into two pieces at right angles to each other.", {
+        reveal: ["arrow", "drop"],
+      }),
+      line("The piece along the line is the side next to the angle. Its size is $F\\cos\\theta$.", {
+        say: "The piece along the line is the side next to the angle. Its size is F cos theta.",
+        math: "\\text{along the line: } F\\cos\\theta",
+        reveal: ["arrow", "drop", "adj"],
+      }),
+      line("The piece across the line is the side opposite the angle. Its size is $F\\sin\\theta$.", {
+        say: "The piece across the line is the side opposite the angle. Its size is F sine theta.",
+        math: "\\text{across the line: } F\\sin\\theta",
+        reveal: ["arrow", "drop", "adj", "opp"],
+      }),
+      line("So here's the one rule to remember: the part of a force along any direction is the force times the cosine of the angle between them.", {
+        math: "\\text{part along a direction} = F\\cos(\\text{angle between them})",
+        reveal: ["arrow", "drop", "adj", "opp"],
+      }),
+    ],
+  },
+  {
+    id: "resolve",
     title: "Splitting the weight",
     lines: [
-      line("Here's the key trick. Gravity points straight down, but the surface is tilted. So we split $mg$ into two parts.", {
-        say: "Here's the key trick. Gravity points straight down, but the surface is tilted. So we split m g into two parts.",
-        reveal: ["mg"],
+      line("Now let's split the weight of the block. This is the step that confuses most people, so we'll take it really slowly."),
+      line("Zoom in on the block. Three lines matter here: the radius, from the block to the centre of the dome; the surface, which just touches the dome at the block; and the vertical, the direction gravity pulls.", {
+        reveal: ["lines"],
       }),
-      line("One part pushes into the dome, along the radius. Its size is $mg\\sin\\varphi$.", {
-        say: "One part pushes into the dome, along the radius. Its size is m g sine phi.",
-        math: "\\text{into the dome: } mg\\sin\\varphi",
-        reveal: ["mgsin"],
+      line("The radius and the surface always meet at a right angle. That's true for every circle: the radius meets the curve square on.", {
+        reveal: ["lines", "right"],
       }),
-      line("The other part pulls down along the surface. Its size is $mg\\cos\\varphi$.", {
-        say: "The other part pulls down along the surface. Its size is m g cos phi.",
-        math: "\\text{down the slope: } mg\\cos\\varphi",
-        reveal: ["mgcos"],
+      line("So the radius and the surface make perfect axes. One runs along the motion, the other runs straight across it.", { reveal: ["lines", "right"] }),
+      line("Now the angles. Down at the centre, the radius makes angle $\\varphi$ with the ground.", {
+        say: "Now the angles. Down at the centre, the radius makes angle phi with the ground.",
+        reveal: ["lines", "right", "phiC"],
       }),
-      line("Let's check that makes sense. At the bottom, the surface is like a vertical wall, so all of gravity pulls along it: $\\cos 0 = 1$.", {
-        say: "Let's check that makes sense. At the bottom, the surface is like a vertical wall, so all of gravity pulls along it. Cos zero is one.",
-        math: "\\varphi = 0:\\; \\cos 0 = 1",
+      line("Turn both of those lines by ninety degrees. The radius turns into the surface, and the ground turns into the vertical.", {
+        reveal: ["lines", "right", "phiC"],
       }),
-      line("At the top, the surface is flat, so all of gravity presses into it: $\\sin 90^\\circ = 1$. Good, both ends agree.", {
-        say: "At the top, the surface is flat, so all of gravity presses into it. Sine ninety degrees is one. Good, both ends agree.",
-        math: "\\varphi = 90^\\circ:\\; \\sin 90^\\circ = 1",
+      line("Turning two lines by the same amount doesn't change the angle between them. So the vertical and the surface also meet at angle $\\varphi$.", {
+        say: "Turning two lines by the same amount doesn't change the angle between them. So the vertical and the surface also meet at angle phi.",
+        math: "\\text{angle between } mg \\text{ and the surface} = \\varphi",
+        reveal: ["lines", "right", "phiC", "angleT", "mgBig"],
+      }),
+      line("And since the surface and radius are at ninety degrees, the vertical makes $90^\\circ - \\varphi$ with the radius.", {
+        say: "And since the surface and the radius are at ninety degrees, the vertical makes ninety degrees minus phi with the radius.",
+        math: "\\text{angle between } mg \\text{ and the radius} = 90^\\circ - \\varphi",
+        reveal: ["lines", "right", "phiC", "angleT", "angleR", "mgBig"],
+      }),
+      line("Now use our rule. The part of $mg$ along the surface is $mg\\cos\\varphi$, and it pulls the block down the slope.", {
+        say: "Now use our rule. The part of m g along the surface is m g cos phi, and it pulls the block down the slope.",
+        math: "\\text{along the surface: } mg\\cos\\varphi \\;(\\text{down the slope})",
+        reveal: ["lines", "right", "angleT", "angleR", "mgBig", "projT"],
+      }),
+      line("The part along the radius is $mg\\cos(90^\\circ - \\varphi)$. And $\\cos(90^\\circ - \\varphi)$ is the same as $\\sin\\varphi$. So it's $mg\\sin\\varphi$, pressing into the dome.", {
+        say: "The part along the radius is m g cos of ninety degrees minus phi. And cos of ninety degrees minus phi is the same as sine phi. So it's m g sine phi, pressing into the dome.",
+        math: "\\text{into the dome: } mg\\cos(90^\\circ-\\varphi) = mg\\sin\\varphi",
+        reveal: ["lines", "right", "angleT", "angleR", "mgBig", "projT", "projR"],
+      }),
+      line("Always check the ends. At the bottom, $\\varphi = 0$, the surface is a vertical wall, and the whole weight runs along it: $mg\\cos 0 = mg$.", {
+        say: "Always check the ends. At the bottom, phi is zero, the surface is a vertical wall, and the whole weight runs along it. m g cos zero is m g.",
+        math: "\\varphi = 0:\\; mg\\cos 0 = mg \\text{ along the wall}",
+        reveal: ["lines", "right", "angleT", "angleR", "mgBig", "projT", "projR"],
+      }),
+      line("At the top, $\\varphi = 90^\\circ$, the surface is flat, and the whole weight presses into it: $mg\\sin 90^\\circ = mg$. Both ends make sense, so the split is right.", {
+        say: "At the top, phi is ninety degrees, the surface is flat, and the whole weight presses into it. m g sine ninety is m g. Both ends make sense, so the split is right.",
+        math: "\\varphi = 90^\\circ:\\; mg\\sin 90^\\circ = mg \\text{ into the top}",
+        reveal: ["lines", "right", "angleT", "angleR", "mgBig", "projT", "projR"],
       }),
     ],
   },
@@ -192,26 +264,36 @@ export const BEATS: Beat[] = [
     id: "balance",
     title: "Balancing the forces",
     lines: [
-      line("Now we balance the forces, one direction at a time.", { reveal: ["mg", "N", "f", "T"] }),
-      line("Along the radius: $N$ pushes out, and $mg\\sin\\varphi$ pushes in. They cancel, so $N = mg\\sin\\varphi$.", {
-        say: "Along the radius, N pushes out, and m g sine phi pushes in. They cancel, so N equals m g sine phi.",
-        math: "N = mg\\sin\\varphi",
+      line("Now we balance the forces, one direction at a time. Pick a direction, add up everything pointing one way, and set it equal to everything pointing the other way.", {
+        reveal: ["mg", "N", "f", "T"],
+      }),
+      line("First, across the surface, along the radius. Pointing out: the normal force $N$. Pointing in: $mg\\sin\\varphi$.", {
+        say: "First, across the surface, along the radius. Pointing out, the normal force, N. Pointing in, m g sine phi.",
         reveal: ["mg", "N", "f", "T", "mgsin"],
       }),
-      line("That means friction is $f = \\mu N = \\mu mg\\sin\\varphi$.", {
-        say: "That means friction is mu N, which is mu m g sine phi.",
+      line("The pull and friction both lie along the surface, so they have no part across it. They don't enter this balance.", {
+        reveal: ["mg", "N", "f", "T", "mgsin"],
+      }),
+      line("Out equals in, so $N = mg\\sin\\varphi$. Notice the normal force is not $mg$. It depends on where the block is.", {
+        say: "Out equals in, so N equals m g sine phi. Notice the normal force is not m g. It depends on where the block is.",
+        math: "\\text{out} = \\text{in}:\\quad N = mg\\sin\\varphi",
+        reveal: ["mg", "N", "f", "T", "mgsin"],
+      }),
+      line("That gives the friction: $f = \\mu N = \\mu mg\\sin\\varphi$.", {
+        say: "That gives the friction. f equals mu N, which is mu m g sine phi.",
         math: "f = \\mu N = \\mu mg\\sin\\varphi",
       }),
-      line("Along the surface: $T$ pulls up. Gravity's part $mg\\cos\\varphi$ and friction both pull down. They cancel too.", {
-        say: "Along the surface, T pulls up. Gravity's part, m g cos phi, and friction both pull down. They cancel too.",
+      line("Next, along the surface. Pointing up the slope: the pull $T$. Pointing down the slope: gravity's part $mg\\cos\\varphi$, and friction, because the block is moving up.", {
+        say: "Next, along the surface. Pointing up the slope, the pull, T. Pointing down the slope, gravity's part, m g cos phi, and friction, because the block is moving up.",
         reveal: ["mg", "N", "f", "T", "mgsin", "mgcos"],
       }),
-      line("So $T = mg\\cos\\varphi + \\mu mg\\sin\\varphi$. That's how hard the person must pull at angle $\\varphi$.", {
-        say: "So T equals m g cos phi, plus mu m g sine phi. That's how hard the person must pull at angle phi.",
-        math: "T = mg\\cos\\varphi + \\mu mg\\sin\\varphi",
+      line("The normal force is across the surface, so it has no part along it. It doesn't enter this balance.", { reveal: ["mg", "N", "f", "T", "mgsin", "mgcos"] }),
+      line("Up equals down, so $T = mg\\cos\\varphi + \\mu mg\\sin\\varphi$. That's exactly how hard the person must pull at angle $\\varphi$.", {
+        say: "Up equals down, so T equals m g cos phi, plus mu m g sine phi. That's exactly how hard the person must pull at angle phi.",
+        math: "\\text{up} = \\text{down}:\\quad T = mg\\cos\\varphi + \\mu mg\\sin\\varphi",
       }),
-      line("Notice: at the bottom the pull is $mg$, and at the top it's only $\\mu mg$. The pull changes along the way.", {
-        say: "Notice, at the bottom the pull is m g, and at the top it's only mu m g. The pull changes along the way.",
+      line("At the bottom the pull is $mg$, and at the top it's only $\\mu mg$. It changes all the way up, and that's why we need an integral.", {
+        say: "At the bottom the pull is m g, and at the top it's only mu m g. It changes all the way up, and that's why we need an integral.",
         math: "T(0) = mg, \\quad T\\!\\left(\\tfrac{\\pi}{2}\\right) = \\mu mg",
       }),
     ],
@@ -285,6 +367,34 @@ export const BEATS: Beat[] = [
       line("Quick check: if the dome were smooth, $\\mu = 0$, and the work is just $mgR$. That makes sense.", {
         say: "Quick check. If the dome were smooth, mu is zero, and the work is just m g R. That makes sense.",
         math: "\\mu = 0 \\;\\Rightarrow\\; W = mgR",
+      }),
+    ],
+  },
+  {
+    id: "energy",
+    title: "Check: the energy method",
+    lines: [
+      line("Now let's check the answer a completely different way, using energy. No integral this time."),
+      line("The work-energy theorem says the total work done by all the forces equals the change in kinetic energy.", { math: "W_{\\text{total}} = \\Delta KE" }),
+      line("The block moves slowly, so its kinetic energy never changes. The total work must be zero.", {
+        math: "W_{\\text{person}} + W_{\\text{gravity}} + W_{\\text{friction}} + W_N = 0",
+      }),
+      line("The normal force always pushes at right angles to the motion, so it does no work at all.", { math: "W_N = 0" }),
+      line("Gravity does negative work, because the block rises a height $R$ against it. That's $-mgR$.", {
+        say: "Gravity does negative work, because the block rises a height R against it. That's minus m g R.",
+        math: "W_{\\text{gravity}} = -mgR",
+      }),
+      line("Friction also does negative work. By the horizontal-distance rule, that's $-\\mu mgR$.", {
+        say: "Friction also does negative work. By the horizontal distance rule, that's minus mu m g R.",
+        math: "W_{\\text{friction}} = -\\mu mgR",
+      }),
+      line("So the person's work is $mgR + \\mu mgR$. The very same answer. Two different methods, one result.", {
+        say: "So the person's work is m g R plus mu m g R. The very same answer. Two different methods, one result.",
+        math: "W_{\\text{person}} = mgR(1+\\mu) \\;\\checkmark",
+      }),
+      line("The code checked this too. In the simulation, the three works add up to zero: {{wsim}} minus {{wg}} minus {{wf}}.", {
+        say: "The code checked this too. In the simulation, the three works add up to zero. {{wsimSay}}, minus {{wgSay}}, minus {{wfSay}}.",
+        math: "{{wsim}} - {{wg}} - {{wf}} = 0 \\text{ J}",
       }),
     ],
   },

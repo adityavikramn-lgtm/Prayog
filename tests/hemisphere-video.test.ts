@@ -4,7 +4,10 @@ import { BEATS, QUESTION, fill, lineKey, scriptValues, spokenText } from "../src
 
 const values = scriptValues();
 const lines = BEATS.flatMap((b) => b.lines.map((line, i) => ({ beat: b.id, i, line })));
-const KNOWN_TAGS = ["R", "m", "mu", "push", "angle", "pieces", "mg", "N", "f", "T", "mgsin", "mgcos", "phi", "ds", "height", "horizontal"];
+const KNOWN_TAGS = [
+  ...["R", "m", "mu", "push", "angle", "pieces", "mg", "N", "f", "T", "mgsin", "mgcos", "phi", "ds", "height", "horizontal"],
+  ...["arrow", "drop", "adj", "opp", "lines", "right", "phiC", "angleT", "angleR", "mgBig", "projT", "projR"],
+];
 
 describe("rough-dome lesson: words", () => {
   it("starts with the complete question, read aloud", () => {
@@ -21,13 +24,34 @@ describe("rough-dome lesson: words", () => {
   it("explains each idea before it is used", () => {
     const order = BEATS.map((b) => b.id);
     const before = (a: string, b: string) => expect(order.indexOf(a as never)).toBeLessThan(order.indexOf(b as never));
+    before("givens", "approach"); // plan the attack before any maths
+    before("approach", "work");
     before("work", "setup"); // what work is, before writing dW = T ds
     before("forces", "balance"); // meet the forces before balancing them
     before("slowly", "balance"); // why they balance
     before("geometry", "setup"); // ds = R dφ before using it
-    before("components", "balance"); // splitting mg before using its parts
+    before("trig", "resolve"); // how to split any force, before splitting mg
+    before("resolve", "balance"); // splitting mg before using its parts
     before("setup", "integrate");
     before("integrate", "answer");
+    before("answer", "energy"); // a second, independent check
+  });
+
+  it("resolving the weight explains every angle: right angle, φ with the surface, 90° − φ with the radius", () => {
+    const resolve = BEATS.find((b) => b.id === "resolve")!;
+    const said = resolve.lines.map((l) => spokenText(l, values)).join(" ");
+    for (const idea of ["right angle", "same amount", "phi", "ninety degrees minus phi", "cos phi", "sine phi", "check the ends"]) {
+      expect(said.toLowerCase()).toContain(idea.toLowerCase());
+    }
+    const tags = new Set(resolve.lines.flatMap((l) => l.reveal ?? []));
+    for (const t of ["lines", "right", "angleT", "angleR", "projT", "projR"]) expect(tags).toContain(t);
+  });
+
+  it("the energy check uses the work-energy theorem and agrees with the simulation", () => {
+    const energy = BEATS.find((b) => b.id === "energy")!;
+    const math = energy.lines.map((l) => fill(l.math ?? "", values)).join(" ");
+    expect(math).toContain("\\Delta KE");
+    expect(math).toContain("30.0 - 20.0 - 10.0 = 0");
   });
 
   it("captions fill every placeholder and pair their maths markers", () => {
@@ -62,10 +86,10 @@ describe("rough-dome lesson: words", () => {
 });
 
 describe("rough-dome lesson: timing", () => {
-  it("is a full lesson of 9 to 15 minutes at a calm pace", () => {
+  it("is a full lesson of 12 to 22 minutes at a calm pace", () => {
     const s = planHemisphere().seconds;
-    expect(s).toBeGreaterThanOrEqual(9 * 60);
-    expect(s).toBeLessThanOrEqual(15 * 60);
+    expect(s).toBeGreaterThanOrEqual(12 * 60);
+    expect(s).toBeLessThanOrEqual(22 * 60);
   });
 
   it("with a voiceover, lines play one after another and each beat waits for its last line", () => {

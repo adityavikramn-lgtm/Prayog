@@ -126,7 +126,7 @@ const MathPanel: React.FC<{ ctx: Ctx; fontSize?: number; top?: number }> = ({ ct
               border: `2px solid ${i === rows.length - 1 ? COLORS.boardLine : "transparent"}`,
             }}
           >
-            <Tex tex={r.math!} />
+            <Tex tex={fill(r.math!, ctx.values)} />
           </div>
         ))}
       </div>
@@ -444,34 +444,174 @@ const Geometry: React.FC<SceneProps> = ({ ctx }) => {
   );
 };
 
-const Components: React.FC<SceneProps> = ({ ctx }) => {
-  const phi = FBD_PHI;
-  const p = blockAt(phi);
-  const mg = EXAMPLE.m * EXAMPLE.g;
-  const inward = neg(outward(phi));
-  const down = neg(upSlope(phi));
-  const sinTip = { x: p.x + inward.x * mg * Math.sin(phi) * FORCE_SCALE, y: p.y + inward.y * mg * Math.sin(phi) * FORCE_SCALE };
-  const cosTip = { x: p.x + down.x * mg * Math.cos(phi) * FORCE_SCALE, y: p.y + down.y * mg * Math.cos(phi) * FORCE_SCALE };
+type Pt = { x: number; y: number };
+const add = (p: Pt, v: Pt, k = 1): Pt => ({ x: p.x + v.x * k, y: p.y + v.y * k });
+
+/** Arc at `c` from direction a to direction b (the smaller way round), plus where its label goes. */
+function arc(c: Pt, r: number, a: Pt, b: Pt) {
+  const t1 = Math.atan2(a.y, a.x);
+  let d = Math.atan2(b.y, b.x) - t1;
+  while (d > Math.PI) d -= 2 * Math.PI;
+  while (d <= -Math.PI) d += 2 * Math.PI;
+  const p1 = { x: c.x + r * Math.cos(t1), y: c.y + r * Math.sin(t1) };
+  const p2 = { x: c.x + r * Math.cos(t1 + d), y: c.y + r * Math.sin(t1 + d) };
+  const mid = t1 + d / 2;
+  return {
+    d: `M ${p1.x} ${p1.y} A ${r} ${r} 0 0 ${d > 0 ? 1 : 0} ${p2.x} ${p2.y}`,
+    label: (extra: number) => ({ x: c.x + (r + extra) * Math.cos(mid), y: c.y + (r + extra) * Math.sin(mid) }),
+  };
+}
+
+/** Sine and cosine refresher: any force splits into a part along a line and a part across it. */
+const TrigScene: React.FC<SceneProps> = ({ ctx }) => {
+  const O = { x: 200, y: 640 };
+  const th = 35 * DEG;
+  const F = 560;
+  const tip = { x: O.x + F * Math.cos(th), y: O.y - F * Math.sin(th) };
+  const foot = { x: tip.x, y: O.y };
+  const a = arc(O, 110, { x: 1, y: 0 }, { x: Math.cos(th), y: -Math.sin(th) });
   return (
     <>
-      <Board phi={phi} local={ctx.local} pullerExpression="calm" />
       <Svg>
-        <AngleMark phi={phi} opacity={0.6} />
-      </Svg>
-      <ForcesAt ctx={ctx} phi={phi} />
-      <Svg>
-        <Text x={sinTip.x + 30} y={sinTip.y + 10} color={COLORS.chalk} size={26} anchor="start" opacity={shown(ctx, "mgsin")}>
-          mg sin φ
+        <line x1={O.x - 40} y1={O.y} x2={1040} y2={O.y} stroke={COLORS.chalk} strokeWidth={4} />
+        <Text x={1040} y={O.y + 40} color={COLORS.chalkDim} size={26} anchor="end">
+          the line
         </Text>
-        <Text x={cosTip.x - 20} y={cosTip.y + 30} color={COLORS.chalk} size={26} anchor="end" opacity={shown(ctx, "mgcos")}>
-          mg cos φ
-        </Text>
+        <g opacity={shown(ctx, "arrow")}>
+          <Arrow x1={O.x} y1={O.y} x2={tip.x} y2={tip.y} color={COLORS.force} head="open-triangle" width={7} label={{ text: "F" }} fontSize={38} />
+          <path d={a.d} fill="none" stroke={COLORS.kan} strokeWidth={4} />
+          <Text x={a.label(36).x} y={a.label(36).y} color={COLORS.kan}>
+            θ
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "drop")}>
+          <line x1={tip.x} y1={tip.y} x2={foot.x} y2={foot.y} stroke={COLORS.chalkDim} strokeWidth={3} strokeDasharray="10 8" />
+          <path d={`M ${foot.x - 28} ${foot.y} L ${foot.x - 28} ${foot.y - 28} L ${foot.x} ${foot.y - 28}`} fill="none" stroke={COLORS.chalkDim} strokeWidth={3} />
+        </g>
+        <g opacity={shown(ctx, "adj")}>
+          <line x1={O.x} y1={O.y + 6} x2={foot.x} y2={foot.y + 6} stroke={COLORS.displacement} strokeWidth={10} strokeLinecap="round" />
+          <Text x={(O.x + foot.x) / 2} y={O.y + 50} color={COLORS.displacement}>
+            F cos θ (next to the angle)
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "opp")}>
+          <line x1={tip.x + 6} y1={tip.y} x2={foot.x + 6} y2={foot.y} stroke={COLORS.kan} strokeWidth={10} strokeLinecap="round" />
+          <Text x={tip.x + 30} y={(tip.y + foot.y) / 2} color={COLORS.kan} anchor="start">
+            F sin θ (opposite)
+          </Text>
+        </g>
       </Svg>
-      <Block phi={phi} local={ctx.local} />
       <MathPanel ctx={ctx} fontSize={30} />
     </>
   );
 };
+
+/** Zoomed in on the block: the radius, the surface and the vertical, with every angle drawn. */
+const ResolveScene: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = FBD_PHI;
+  const B = { x: 540, y: 450 };
+  const inward = { x: Math.cos(phi), y: Math.sin(phi) }; // towards the dome's centre
+  const up = upSlope(phi);
+  const downSlope = neg(up);
+  const down = { x: 0, y: 1 };
+  const L = 300; // length of mg
+  const tT = add(B, downSlope, L * Math.cos(phi));
+  const tR = add(B, inward, L * Math.sin(phi));
+  const mgTip = add(B, down, L);
+  const aT = arc(B, 90, down, downSlope);
+  const aR = arc(B, 150, down, inward);
+  const box = 64; // large enough to show outside Kan's body
+  const c1 = add(B, inward, box);
+  const c2 = add(c1, up, box);
+  const c3 = add(B, up, box);
+  // Small inset of the whole dome for the angle at the centre.
+  const I = { x: 170, y: 860 };
+  const ir = 90;
+  const ip = { x: I.x - ir * Math.cos(phi), y: I.y - ir * Math.sin(phi) };
+  const ia = arc(I, 40, { x: -1, y: 0 }, { x: -Math.cos(phi), y: -Math.sin(phi) });
+  return (
+    <>
+      <Svg>
+        <g opacity={shown(ctx, "lines")}>
+          <line x1={B.x - inward.x * 60} y1={B.y - inward.y * 60} x2={B.x + inward.x * 430} y2={B.y + inward.y * 430} stroke={COLORS.displacement} strokeWidth={3} />
+          <Text x={B.x + inward.x * 460} y={B.y + inward.y * 460 - 20} color={COLORS.displacement} size={28}>
+            radius (to the centre)
+          </Text>
+          <line x1={B.x - up.x * 330} y1={B.y - up.y * 330} x2={B.x + up.x * 330} y2={B.y + up.y * 330} stroke={COLORS.chalk} strokeWidth={4} />
+          <Text x={B.x + up.x * 360} y={B.y + up.y * 360 - 10} color={COLORS.chalk} size={28} anchor="start">
+            surface
+          </Text>
+          <line x1={B.x} y1={B.y - 260} x2={B.x} y2={B.y + 380} stroke={COLORS.chalkDim} strokeWidth={3} strokeDasharray="10 10" />
+          <Text x={B.x - 14} y={B.y - 270} color={COLORS.chalkDim} size={28} anchor="end">
+            vertical
+          </Text>
+        </g>
+        <path d={`M ${c1.x} ${c1.y} L ${c2.x} ${c2.y} L ${c3.x} ${c3.y}`} fill="none" stroke={COLORS.chalk} strokeWidth={3} opacity={shown(ctx, "right")} />
+        <g opacity={shown(ctx, "phiC")}>
+          <path d={`M ${I.x - ir} ${I.y} A ${ir} ${ir} 0 0 1 ${I.x + ir} ${I.y}`} fill="none" stroke={COLORS.chalk} strokeWidth={3} />
+          <line x1={I.x - ir - 30} y1={I.y} x2={I.x + ir + 30} y2={I.y} stroke={COLORS.chalk} strokeWidth={3} />
+          <line x1={I.x} y1={I.y} x2={ip.x} y2={ip.y} stroke={COLORS.displacement} strokeWidth={3} />
+          <path d={ia.d} fill="none" stroke={COLORS.kan} strokeWidth={3} />
+          <Text x={ia.label(22).x} y={ia.label(22).y} color={COLORS.kan} size={24}>
+            φ
+          </Text>
+          <Text x={I.x + ir + 40} y={I.y - 40} color={COLORS.chalkDim} size={22} anchor="start">
+            at the centre
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "mgBig")}>
+          <Arrow x1={B.x} y1={B.y} x2={mgTip.x} y2={mgTip.y} color={COLORS.force} head="open-triangle" width={7} label={{ text: "mg" }} fontSize={34} />
+        </g>
+        <g opacity={shown(ctx, "angleT")}>
+          <path d={aT.d} fill="none" stroke={COLORS.kan} strokeWidth={4} />
+          <Text x={aT.label(28).x} y={aT.label(28).y} color={COLORS.kan} size={30}>
+            φ
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "angleR")}>
+          <path d={aR.d} fill="none" stroke={COLORS.kan} strokeWidth={4} strokeDasharray="8 6" />
+          <Text x={aR.label(56).x} y={aR.label(56).y} color={COLORS.kan} size={28}>
+            90° − φ
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "projT")}>
+          <line x1={mgTip.x} y1={mgTip.y} x2={tT.x} y2={tT.y} stroke={COLORS.chalkDim} strokeWidth={2} strokeDasharray="6 6" />
+          <Arrow x1={B.x} y1={B.y} x2={tT.x} y2={tT.y} color={COLORS.chalk} head="open-triangle" width={5} dashed />
+          <Text x={tT.x - 20} y={tT.y + 26} color={COLORS.chalk} size={28} anchor="end">
+            mg cos φ
+          </Text>
+        </g>
+        <g opacity={shown(ctx, "projR")}>
+          <line x1={mgTip.x} y1={mgTip.y} x2={tR.x} y2={tR.y} stroke={COLORS.chalkDim} strokeWidth={2} strokeDasharray="6 6" />
+          <Arrow x1={B.x} y1={B.y} x2={tR.x} y2={tR.y} color={COLORS.chalk} head="open-triangle" width={5} dashed />
+          <Text x={tR.x + 20} y={tR.y - 10} color={COLORS.chalk} size={28} anchor="start">
+            mg sin φ
+          </Text>
+        </g>
+      </Svg>
+      <div style={{ position: "absolute", left: B.x - 33, top: B.y - 33, opacity: 0.95 }}>
+        <Kan radius={26} expression="calm" look={{ x: up.x, y: up.y }} time={ctx.local} />
+      </div>
+      <MathPanel ctx={ctx} fontSize={28} />
+    </>
+  );
+};
+
+const Approach: React.FC<SceneProps> = ({ ctx }) => (
+  <>
+    <Board phi={25 * DEG} local={ctx.local} pullerExpression="calm" />
+    <Block phi={25 * DEG} local={ctx.local} />
+    <MathPanel ctx={ctx} fontSize={30} />
+  </>
+);
+
+const Energy: React.FC<SceneProps> = ({ ctx }) => (
+  <>
+    <Board phi={90 * DEG} local={ctx.local} pullerExpression="proud" />
+    <Block phi={90 * DEG} local={ctx.local} expression="proud" />
+    <MathPanel ctx={ctx} fontSize={27} />
+  </>
+);
 
 const Balance: React.FC<SceneProps> = ({ ctx }) => (
   <>
@@ -610,7 +750,10 @@ const SCENES: Record<BeatId, React.FC<SceneProps>> = {
   forces: Forces,
   slowly: Slowly,
   geometry: Geometry,
-  components: Components,
+  approach: Approach,
+  trig: TrigScene,
+  resolve: ResolveScene,
+  energy: Energy,
   balance: Balance,
   setup: Derivation,
   integrate: Derivation,
