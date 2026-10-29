@@ -6,8 +6,10 @@
     "@remotion/bundler": "4.0.539",
     "@remotion/cli": "4.0.539",
     "@remotion/google-fonts": "4.0.539",
+    "@remotion/media": "4.0.539",
     "@remotion/paths": "4.0.539",
     "@remotion/player": "4.0.539",
+    "@remotion/renderer": "4.0.539",
     "@remotion/shapes": "4.0.539",
     "@remotion/tailwind-v4": "4.0.539",
     "clsx": "2.1.1",
@@ -52,7 +54,9 @@
     "render": "remotion render",
     "deploy": "node deploy.mjs",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "render:short": "node scripts/render.mjs short",
+    "render:explainer": "node scripts/render.mjs explainer"
   },
   "allowScripts": {
     "esbuild": false

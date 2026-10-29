@@ -37,6 +37,11 @@ export default [
       ...nextRecommendedRules,
     },
   },
+  // Node scripts (render commands)
+  {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: { globals: { process: "readonly", console: "readonly" } },
+  },
   // Remotion rules applied only to remotion files
   {
     files: ["src/remotion/**"],
