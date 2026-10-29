@@ -5,6 +5,7 @@
  * Each physical quantity has one colour in every scene. Colours come from the
  * Okabe-Ito colour-blind-safe set, lightened slightly to read on the dark board.
  * Colour is never the only cue: arrows also carry a label and their own arrowhead style.
+ * Keep in sync with src/theme.ts (scenes need literal colours).
  */
 :root {
   --board: #0f1915;

@@ -22,12 +22,13 @@ All Remotion packages must stay on the **same exact version**. `overrides.zod` i
 - `npm test` — verification suite (Vitest, `tests/**/*.test.ts`)
 - `npm run build` — production build
 - `npm run lint` · `npx tsc --noEmit`
-- `npm run remotion` — Remotion Studio (entry `src/remotion/index.ts`)
+- `npm run remotion` — Remotion Studio (entry `src/remotion/index.ts`); use `--port 3001` while `npm run dev` runs
+- Lab: http://localhost:3000/lab/projectile
 
 ## Non-negotiables
 - **Physics-true:** every frame computed from equations, never hand-keyed. A scene is a pure function of (frame, params): no unseeded randomness, no clocks. Physical objects never use easing (UI may).
 - **Triple-verified:** closed-form solver = independent numerical simulation = stated answer, enforced by tests. Unverified → "Needs teacher review", never "Verified". No hard-coded badges, placeholder numbers or mock data shown as real.
 - **AI for language, code for truth:** AI never produces final numbers; solvers do. Every AI response is zod-validated.
 - **Conventions:** SI units. g = 10 m/s² unless stated ("Real world" lab mode: 9.8). 37°/53° → sin 37° = 3/5, cos 37° = 4/5. Solver and simulation take the same derived inputs. Answers stored as `{ value, unit, exact? }`; show exact form else 3 s.f.
-- **Look:** "chalkboard at night". One colour per quantity (tokens in `styles/global.css`, Tailwind `text-velocity` etc.): velocity blue, acceleration orange, force pink, displacement yellow — always plus a label and a distinct arrowhead style (colour-blind safe). KaTeX for all maths. Big, phone-readable type.
+- **Look:** "chalkboard at night". One colour per quantity (CSS tokens in `styles/global.css`, literal values in `src/theme.ts`; keep both in sync): velocity blue, acceleration orange, force pink, displacement yellow — always plus a label and a distinct arrowhead style (`src/components/Arrow.tsx`, colour-blind safe). Kan's own accent is mint. KaTeX for all maths. Big, phone-readable type.
 - **Originality:** mascot Kan, visuals, questions, scripts all original. Nothing from "Animation vs. Physics" except the idea. No Vedantu branding. Flag any uncertain physics/JEE fact instead of guessing.

@@ -1,4 +1,5 @@
 import katex from "katex";
+import Link from "next/link";
 import "katex/dist/katex.min.css";
 
 const quantities = [
@@ -49,9 +50,15 @@ export default function Home() {
         </ul>
       </section>
 
+      <Link
+        href="/lab/projectile"
+        className="rounded-xl border border-velocity px-6 py-5 text-xl font-bold text-velocity hover:bg-board-raised"
+      >
+        Open the projectile lab →
+      </Link>
+
       <footer className="mt-auto border-t border-board-line pt-5 text-sm text-chalk-dim">
-        Phase 0: setup only. The first lab (projectile motion) arrives in
-        Phase 1.
+        Work in progress: Phase 1 of 7.
       </footer>
     </main>
   );

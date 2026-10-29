@@ -1,5 +1,9 @@
 import { Metadata, Viewport } from "next";
+import { Atkinson_Hyperlegible } from "next/font/google";
 import "../../styles/global.css";
+
+// Designed for legibility; the scenes use the same family.
+const font = Atkinson_Hyperlegible({ weight: ["400", "700"], subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Prayog Studio",
@@ -20,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-board text-chalk antialiased">{children}</body>
+      <body className={`${font.className} bg-board text-chalk antialiased`}>{children}</body>
     </html>
   );
 }
