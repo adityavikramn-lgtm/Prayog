@@ -37,7 +37,8 @@
 - Question (reworded, not copied): block dragged slowly up a rough fixed hemisphere by a string along the surface; work by the man. Answer W = mgR(1 + μ); friction part = μmg × horizontal distance.
 - `src/physics/hemisphere.ts` (forces, W(φ), total), `src/templates/hemisphere/simulate.ts` (independent step-by-step drag: forces from balance, T·ds summed, energy books), tests: worked example 30 J, 50 random cases within 0.1 %, gravity −mgR and friction −μmgR, wrong options (20 J, 35.7 J) tied to named mistakes.
 - `hemisphere-explainer` (16:9, 5 min 30 s without voice, English): hook → setup → free-body diagram (arrows to scale) → integral with a filling work bar → horizontal-distance insight → traps → worked numbers + simulation → recap/CTA. The man's rope keeps its length, so he walks right by the arc the block climbs.
-- Voice: `scripts/voice.mts` (ElevenLabs REST, one MP3 per line, previous/next text for flow; `--dry-run` uses no credits; 3,030 characters). Per-line timing in `plan.ts` so captions and visuals follow the voice.
+- Voice: `scripts/voice.mts` (ElevenLabs REST, one MP3 per line, previous/next text for flow; `--dry-run` uses no credits). Per-line timing in `plan.ts` so captions and visuals follow the voice.
+- Rewritten as a full lesson at the user's request: the complete question shown and read first, then every idea from zero (what work is, each force, why "slowly" means balance, the angle and ds = R dφ, splitting mg, balancing, setting up and doing the two integrals), the answer, its meaning, numbers, traps, recap. 15 beats, 76 lines, each line can add a formula to the board panel and switch on a drawing. 8 min 50 s with the free Windows voice (Microsoft Mark, `--engine=windows`); Everygen voices need a paid Everygen plan, ElevenLabs needs a key.
 
 ## Next
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.

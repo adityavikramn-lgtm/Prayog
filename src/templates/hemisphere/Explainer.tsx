@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import { AbsoluteFill, CalculateMetadataFunction, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 import { Arrow } from "../../components/Arrow";
-import { RichText } from "../../components/RichText";
 import { Tex } from "../../components/Tex";
 import { Kan, KanExpression } from "../../mascot/Kan";
 import { sig3 } from "../../physics/format";
@@ -14,7 +13,7 @@ import { COLORS } from "../../theme";
 import { CLAMP, Captions, Card, fade } from "../../video/ui";
 import { EXAMPLE, MISTAKES } from "./model";
 import { PlannedBeat, Voice, planHemisphere } from "./plan";
-import { BEATS, BeatId, TITLE, fill, scriptValues } from "./script";
+import { BEATS, BeatId, QUESTION, TITLE, fill, scriptValues } from "./script";
 import { simulateDrag } from "./simulate";
 
 export const HemisphereExplainerProps = z.object({
@@ -30,21 +29,23 @@ export const hemisphereMetadata: CalculateMetadataFunction<HemisphereExplainerPr
 
 // Board geometry (pixels). The dome's radius stands for R.
 const W = 1920;
-const CX = 760;
-const GROUND = 820;
+const CX = 640;
+const GROUND = 800;
 const RP = 300;
 const KAN_R = 30;
 const ROPE_R = RP + 6;
 const PULLER_START = CX + RP + 70;
-const FORCE_SCALE = 8; // px per newton, worked example values
+const FORCE_SCALE = 8; // px per newton, for the worked example (m = 2 kg, μ = 0.5)
 const DEG = Math.PI / 180;
+const PANEL = { left: 1130, top: 80, width: 740 };
 
 interface Ctx {
   beat: PlannedBeat;
   values: Record<string, string>;
+  local: number;
 }
 
-/** Full-size (16:9) explainer for the rough-hemisphere work problem. */
+/** The full lesson (16:9): question first, then every idea from zero, then the answer. */
 export const HemisphereExplainer: React.FC<HemisphereExplainerProps> = ({ voice }) => {
   const { fps } = useVideoConfig();
   const plan = useMemo(() => planHemisphere(voice as Voice), [voice]);
@@ -56,7 +57,7 @@ export const HemisphereExplainer: React.FC<HemisphereExplainerProps> = ({ voice 
         const to = Math.round((beat.from + beat.seconds) * fps);
         return (
           <Sequence key={beat.id} name={beat.id} from={from} durationInFrames={to - from}>
-            <BeatView ctx={{ beat, values }} />
+            <BeatView beat={beat} values={values} />
             {beat.lines.map((l) =>
               l.clip ? (
                 <Sequence key={l.key} from={Math.round(l.at * fps)} layout="none">
@@ -71,28 +72,67 @@ export const HemisphereExplainer: React.FC<HemisphereExplainerProps> = ({ voice 
   );
 };
 
-const BeatView: React.FC<{ ctx: Ctx }> = ({ ctx }) => {
+const BeatView: React.FC<{ beat: PlannedBeat; values: Record<string, string> }> = ({ beat, values }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const local = frame / fps;
-  const script = BEATS.find((b) => b.id === ctx.beat.id)!;
-  const Scene = SCENES[ctx.beat.id];
+  const ctx: Ctx = { beat, values, local: frame / fps };
+  const script = BEATS.find((b) => b.id === beat.id)!;
+  const Scene = SCENES[beat.id];
   return (
     <AbsoluteFill>
-      <Scene ctx={ctx} local={local} />
-      <div style={{ position: "absolute", left: 60, top: 36, fontSize: 28, color: COLORS.chalkDim }}>{TITLE.topic}</div>
+      <Scene ctx={ctx} />
+      <div style={{ position: "absolute", left: 60, top: 30, fontSize: 26, color: COLORS.chalkDim }}>{TITLE.topic}</div>
       <Captions
-        cues={script.lines.map((line, i) => ({ at: ctx.beat.lines[i].at, text: fill(line.text, ctx.values) }))}
-        local={local}
-        box={{ left: 140, right: 140, bottom: 30 }}
-        fontSize={44}
+        cues={script.lines.map((l, i) => ({ at: beat.lines[i].at, text: fill(l.text, values) }))}
+        local={ctx.local}
+        box={{ left: 120, right: 120, bottom: 26 }}
+        fontSize={40}
       />
     </AbsoluteFill>
   );
 };
 
-/** Start time of line i in this beat (follows the voiceover when there is one). */
-const at = (ctx: Ctx, i: number) => ctx.beat.lines[Math.min(i, ctx.beat.lines.length - 1)].at;
+// ---------- timing helpers: everything follows the spoken lines ----------
+
+const lineAt = (ctx: Ctx, i: number) => ctx.beat.lines[Math.min(i, ctx.beat.lines.length - 1)].at;
+const lineEnd = (ctx: Ctx, i: number) => {
+  const l = ctx.beat.lines[Math.min(i, ctx.beat.lines.length - 1)];
+  return l.at + l.seconds;
+};
+
+/** Opacity for a drawing tagged `tag`: on from the first line that reveals it. */
+function shown(ctx: Ctx, tag: string): number {
+  const script = BEATS.find((b) => b.id === ctx.beat.id)!;
+  const i = script.lines.findIndex((l) => l.reveal?.includes(tag));
+  return i < 0 ? 0 : fade(ctx.local, lineAt(ctx, i), 0.4);
+}
+
+/** The board panel: a title and every math line spoken so far in this beat. */
+const MathPanel: React.FC<{ ctx: Ctx; fontSize?: number; top?: number }> = ({ ctx, fontSize = 32, top = PANEL.top }) => {
+  const script = BEATS.find((b) => b.id === ctx.beat.id)!;
+  const rows = script.lines.map((l, i) => ({ math: l.math, at: lineAt(ctx, i) })).filter((r) => r.math && r.at <= ctx.local + 0.01);
+  return (
+    <div style={{ position: "absolute", left: PANEL.left, top, width: PANEL.width }}>
+      <div style={{ fontSize: 44, fontWeight: 700, marginBottom: 18, opacity: fade(ctx.local, 0, 0.4) }}>{script.title}</div>
+      <div style={{ fontSize, lineHeight: 1.25, display: "flex", flexDirection: "column", gap: 18 }}>
+        {rows.map((r, i) => (
+          <div
+            key={i}
+            style={{
+              opacity: fade(ctx.local, r.at, 0.4),
+              padding: "10px 16px",
+              borderRadius: 12,
+              background: i === rows.length - 1 ? COLORS.boardRaised : "transparent",
+              border: `2px solid ${i === rows.length - 1 ? COLORS.boardLine : "transparent"}`,
+            }}
+          >
+            <Tex tex={r.math!} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // ---------- the board ----------
 
@@ -102,14 +142,12 @@ const blockAt = (phi: number) => {
   const p = surface(phi, RP + KAN_R);
   return { x: p.x, y: Math.min(p.y, GROUND - KAN_R) };
 };
-/** Unit vectors at angle φ in screen coordinates (y down). */
 const outward = (phi: number) => ({ x: -Math.cos(phi), y: -Math.sin(phi) });
 const upSlope = (phi: number) => ({ x: Math.sin(phi), y: -Math.cos(phi) });
+const neg = (v: { x: number; y: number }) => ({ x: -v.x, y: -v.y });
 
 /** The block climbs at a constant angular rate between t0 and t1 (no easing on a physical object). */
-function climb(local: number, t0: number, t1: number, from = 0, to = 90 * DEG): number {
-  return interpolate(local, [t0, t1], [from, to], CLAMP);
-}
+const climb = (local: number, t0: number, t1: number) => interpolate(local, [t0, t1], [0, 90 * DEG], CLAMP);
 
 const Svg: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
   <svg width={W} height={1080} viewBox={`0 0 ${W} 1080`} style={{ position: "absolute", inset: 0 }}>
@@ -131,42 +169,26 @@ const Text: React.FC<{ x: number; y: number; color?: string; size?: number; anch
   </text>
 );
 
-/** Dome, ground, the rope over the top and the man pulling it. The rope keeps its length. */
-const Board: React.FC<{ phi: number; local: number; pullerExpression?: KanExpression; showRope?: boolean }> = ({
-  phi,
-  local,
-  pullerExpression = "excited",
-  showRope = true,
-}) => {
+/** Dome, ground, the rope over the top and the person pulling it. The rope keeps its length. */
+const Board: React.FC<{ phi: number; local: number; pullerExpression?: KanExpression }> = ({ phi, local, pullerExpression = "excited" }) => {
   const b = surface(phi, ROPE_R);
   const ropeEnd = surface(Math.PI, ROPE_R);
-  const pullerX = PULLER_START + ROPE_R * phi; // every bit of arc the block climbs comes out on the man's side
-  const hatch = Array.from({ length: 34 }, (_, i) => 80 + i * 52);
+  const pullerX = PULLER_START + ROPE_R * phi; // every bit of arc the block climbs comes out on the person's side
+  const hatch = Array.from({ length: 22 }, (_, i) => 70 + i * 50);
   return (
     <>
       <Svg>
         <path d={`M ${CX - RP} ${GROUND} A ${RP} ${RP} 0 0 1 ${CX + RP} ${GROUND} Z`} fill={COLORS.boardRaised} stroke={COLORS.chalk} strokeWidth={4} />
         <path d={`M ${CX - RP} ${GROUND} A ${RP} ${RP} 0 0 1 ${CX + RP} ${GROUND}`} fill="none" stroke={COLORS.chalkDim} strokeWidth={10} strokeDasharray="1 16" strokeLinecap="round" opacity={0.6} />
-        <line x1={60} y1={GROUND} x2={W - 60} y2={GROUND} stroke={COLORS.chalk} strokeWidth={4} />
+        <line x1={60} y1={GROUND} x2={1100} y2={GROUND} stroke={COLORS.chalk} strokeWidth={4} />
         {hatch.map((x) => (
           <line key={x} x1={x} y1={GROUND + 4} x2={x - 22} y2={GROUND + 26} stroke={COLORS.chalkDim} strokeWidth={2} opacity={0.5} />
         ))}
-        {showRope && (
-          <>
-            <path
-              d={`M ${b.x} ${b.y} A ${ROPE_R} ${ROPE_R} 0 0 1 ${ropeEnd.x} ${ropeEnd.y} L ${pullerX - 34} ${GROUND - 26}`}
-              fill="none"
-              stroke="#c9b48a"
-              strokeWidth={4}
-            />
-          </>
-        )}
+        <path d={`M ${b.x} ${b.y} A ${ROPE_R} ${ROPE_R} 0 0 1 ${ropeEnd.x} ${ropeEnd.y} L ${pullerX - 34} ${GROUND - 26}`} fill="none" stroke="#c9b48a" strokeWidth={4} />
       </Svg>
-      {showRope && (
-        <div style={{ position: "absolute", left: pullerX - 50, top: GROUND - 100 }}>
-          <Kan radius={30} expression={pullerExpression} arms="out" look={{ x: -1, y: -0.2 }} time={local + 0.7} />
-        </div>
-      )}
+      <div style={{ position: "absolute", left: pullerX - 50, top: GROUND - 100 }}>
+        <Kan radius={30} expression={pullerExpression} arms="out" look={{ x: -1, y: -0.2 }} time={local + 0.7} />
+      </div>
     </>
   );
 };
@@ -182,18 +204,20 @@ const Block: React.FC<{ phi: number; local: number; expression?: KanExpression }
   );
 };
 
-const Force: React.FC<{ from: { x: number; y: number }; dir: { x: number; y: number }; newtons: number; label: string; opacity?: number; dashed?: boolean }> = ({
+const Force: React.FC<{ from: { x: number; y: number }; dir: { x: number; y: number }; newtons: number; label: string; opacity: number; dashed?: boolean; color?: string }> = ({
   from,
   dir,
   newtons,
   label,
-  opacity = 1,
+  opacity,
   dashed,
+  color = COLORS.force,
 }) => {
+  if (opacity <= 0) return null;
   const len = newtons * FORCE_SCALE;
   return (
     <g opacity={opacity}>
-      <Arrow x1={from.x} y1={from.y} x2={from.x + dir.x * len} y2={from.y + dir.y * len} color={COLORS.force} head="open-triangle" width={dashed ? 4 : 6} dashed={dashed} label={{ text: label }} fontSize={34} />
+      <Arrow x1={from.x} y1={from.y} x2={from.x + dir.x * len} y2={from.y + dir.y * len} color={color} head="open-triangle" width={dashed ? 4 : 6} dashed={dashed} label={label ? { text: label } : undefined} fontSize={32} />
     </g>
   );
 };
@@ -201,7 +225,7 @@ const Force: React.FC<{ from: { x: number; y: number }; dir: { x: number; y: num
 const AngleMark: React.FC<{ phi: number; opacity: number }> = ({ phi, opacity }) => {
   const r = 90;
   const end = surface(phi, r);
-  const lab = surface(phi / 2, r + 36);
+  const lab = surface(phi / 2, r + 34);
   const tip = surface(phi, RP);
   return (
     <g opacity={opacity}>
@@ -214,23 +238,39 @@ const AngleMark: React.FC<{ phi: number; opacity: number }> = ({ phi, opacity })
   );
 };
 
-/** Stacked bar of the man's work so far: gravity part + friction part (worked example). */
-const WorkBar: React.FC<{ phi: number; opacity: number; top?: number }> = ({ phi, opacity, top = 560 }) => {
+/** All forces on the block at angle φ, each switched on by its tag. Drawn to scale for the worked example. */
+const ForcesAt: React.FC<{ ctx: Ctx; phi: number }> = ({ ctx, phi }) => {
+  const f = forcesAt(EXAMPLE, phi);
+  const p = blockAt(phi);
+  const mg = EXAMPLE.m * EXAMPLE.g;
+  return (
+    <Svg>
+      <Force from={p} dir={{ x: 0, y: 1 }} newtons={mg} label="mg" opacity={shown(ctx, "mg")} />
+      <Force from={p} dir={outward(phi)} newtons={f.normal} label="N" opacity={shown(ctx, "N")} />
+      <Force from={p} dir={neg(upSlope(phi))} newtons={f.friction} label="f" opacity={shown(ctx, "f")} />
+      <Force from={p} dir={upSlope(phi)} newtons={f.tension} label="T" opacity={shown(ctx, "T")} />
+      <Force from={p} dir={neg(outward(phi))} newtons={mg * Math.sin(phi)} label="" dashed opacity={shown(ctx, "mgsin") * 0.9} color={COLORS.chalk} />
+      <Force from={p} dir={neg(upSlope(phi))} newtons={mg * Math.cos(phi)} label="" dashed opacity={shown(ctx, "mgcos") * 0.9} color={COLORS.chalk} />
+    </Svg>
+  );
+};
+
+/** Stacked bar of the person's work so far: lifting part + friction part (worked example). */
+const WorkBar: React.FC<{ phi: number; opacity: number; top: number }> = ({ phi, opacity, top }) => {
   const w = workUpTo(EXAMPLE, phi);
   const full = totalWork(EXAMPLE);
-  const width = 600;
-  const left = 1200;
+  const width = 640;
   return (
-    <div style={{ position: "absolute", left, top, width, opacity }}>
+    <div style={{ position: "absolute", left: PANEL.left, top, width, opacity }}>
       <div style={{ fontSize: 30, fontWeight: 700, marginBottom: 10 }}>
-        Work by the man so far: <span style={{ color: COLORS.displacement }}>{sig3(w.total)} J</span>
+        Work by the person so far: <span style={{ color: COLORS.displacement }}>{sig3(w.total)} J</span>
       </div>
       <div style={{ display: "flex", height: 34, background: COLORS.boardRaised, borderRadius: 8, overflow: "hidden", border: `2px solid ${COLORS.boardLine}` }}>
         <div style={{ width: (w.againstGravity / full) * width, background: COLORS.chalk }} />
         <div style={{ width: (w.againstFriction / full) * width, background: COLORS.kan }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, marginTop: 8 }}>
-        <span>gravity {sig3(w.againstGravity)} J</span>
+        <span>lifting {sig3(w.againstGravity)} J</span>
         <span style={{ color: COLORS.kan }}>friction {sig3(w.againstFriction)} J</span>
       </div>
       <div style={{ fontSize: 20, color: COLORS.chalkDim, marginTop: 6 }}>example: m = 2 kg, R = 1 m, μ = 0.5, g = 10 m/s²</div>
@@ -238,190 +278,308 @@ const WorkBar: React.FC<{ phi: number; opacity: number; top?: number }> = ({ phi
   );
 };
 
-const RightCard: React.FC<{ opacity: number; top?: number; children: React.ReactNode; fontSize?: number }> = ({ opacity, top = 110, children, fontSize = 38 }) => (
-  <Card opacity={opacity} fontSize={fontSize} style={{ left: 1160, top, width: 720, textAlign: "left", fontWeight: 400 }}>
-    {children}
-  </Card>
-);
+// ---------- scenes ----------
 
-// ---------- beats ----------
+type SceneProps = { ctx: Ctx };
 
-type SceneProps = { ctx: Ctx; local: number };
-
-const Hook: React.FC<SceneProps> = ({ ctx, local }) => {
-  const phi = climb(local, 3, ctx.beat.seconds - 2);
+const Question: React.FC<SceneProps> = ({ ctx }) => {
+  const { local } = ctx;
+  const phi = 25 * DEG;
   return (
     <>
       <Board phi={phi} local={local} />
-      <Block phi={phi} local={local} expression={phi < 0.05 ? "calm" : phi < 1.5 ? "scared" : "dizzy"} />
-      <div style={{ position: "absolute", left: 1240, top: 120, width: 620, opacity: fade(local, 0.3, 0.6) }}>
-        <div style={{ fontSize: 64, fontWeight: 700, lineHeight: 1.1 }}>{TITLE.title}</div>
-        <div style={{ fontSize: 36, color: COLORS.displacement, marginTop: 16 }}>{TITLE.subtitle}</div>
-      </div>
+      <Block phi={phi} local={local} />
+      <Card opacity={fade(local, 0.1, 0.5)} fontSize={36} style={{ left: PANEL.left - 20, top: 80, width: PANEL.width + 20, textAlign: "left", fontWeight: 400, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 28, color: COLORS.displacement, fontWeight: 700, marginBottom: 12 }}>QUESTION</div>
+        {QUESTION}
+      </Card>
     </>
   );
 };
 
-const Setup: React.FC<SceneProps> = ({ ctx, local }) => {
-  const phi = 35 * DEG;
-  const top = surface(90 * DEG);
+const Givens: React.FC<SceneProps> = ({ ctx }) => {
+  const { local } = ctx;
+  const phi = 25 * DEG;
+  const top = surface(70 * DEG);
+  const p = blockAt(phi);
   return (
     <>
       <Board phi={phi} local={local} pullerExpression="calm" />
       <Svg>
-        <g opacity={fade(local, at(ctx, 0) + 0.5, 0.5)}>
-          <Arrow x1={CX} y1={GROUND} x2={CX + RP * Math.cos(30 * DEG)} y2={GROUND - RP * Math.sin(30 * DEG)} color={COLORS.displacement} head="bars" width={4} />
-          <Text x={CX + 150} y={GROUND - 110} color={COLORS.displacement}>
+        <g opacity={shown(ctx, "R")}>
+          <Arrow x1={CX} y1={GROUND} x2={CX + RP * Math.cos(35 * DEG)} y2={GROUND - RP * Math.sin(35 * DEG)} color={COLORS.displacement} head="bars" width={4} />
+          <Text x={CX + 150} y={GROUND - 130} color={COLORS.displacement}>
             R
           </Text>
-          <Text x={top.x} y={top.y - 40} color={COLORS.chalkDim} size={28}>
-            rough surface, μ
-          </Text>
         </g>
-        <AngleMark phi={phi} opacity={fade(local, at(ctx, 3), 0.6)} />
+        <Text x={p.x - 70} y={p.y - 40} color={COLORS.kan} opacity={shown(ctx, "m")}>
+          m
+        </Text>
+        <Text x={top.x - 60} y={top.y - 40} color={COLORS.chalkDim} size={30} opacity={shown(ctx, "mu")}>
+          rough: μ
+        </Text>
       </Svg>
       <Block phi={phi} local={local} />
-      <RightCard opacity={fade(local, at(ctx, 1), 0.5)}>
-        <div style={{ lineHeight: 1.7 }}>
-          <div>· string along the surface, sliding freely</div>
-          <div style={{ opacity: fade(local, at(ctx, 2), 0.5) }}>· slowly: no speeding up, forces balance</div>
-          <div style={{ opacity: fade(local, at(ctx, 3), 0.5) }}>
-            · <Tex tex="\varphi = 0" /> on the ground, <Tex tex="90^\circ" /> at the top
-          </div>
+      <MathPanel ctx={ctx} />
+    </>
+  );
+};
+
+/** What work means: a push on flat ground, then a slanted push, then a changing force cut into pieces. */
+const WorkScene: React.FC<SceneProps> = ({ ctx }) => {
+  const { local } = ctx;
+  const y = 600;
+  const push = shown(ctx, "push");
+  const angle = shown(ctx, "angle");
+  const pieces = shown(ctx, "pieces");
+  const flat = 1 - pieces;
+  const t0 = lineAt(ctx, 1);
+  const x = interpolate(local, [t0, t0 + 8], [220, 760], CLAMP); // steady speed: work is done against friction
+  const th = 30 * DEG;
+  // A quarter-circle path cut into pieces; each arrow's length is the pull there (example values).
+  const n = 9;
+  const arcC = { x: 560, y: 820 };
+  const arcR = 330;
+  return (
+    <>
+      <Svg>
+        <g opacity={flat}>
+          <line x1={100} y1={y + 32} x2={1060} y2={y + 32} stroke={COLORS.chalk} strokeWidth={4} />
+          <g opacity={push * (1 - angle)}>
+            <Arrow x1={x - 150} y1={y} x2={x - 34} y2={y} color={COLORS.force} head="open-triangle" width={6} label={{ text: "F" }} fontSize={34} />
+          </g>
+          <g opacity={angle}>
+            <Arrow x1={x - 34 - 130 * Math.cos(th)} y1={y + 130 * Math.sin(th)} x2={x - 34} y2={y} color={COLORS.force} head="open-triangle" width={6} label={{ text: "F" }} fontSize={34} />
+            <Arrow x1={x - 34 - 130 * Math.cos(th)} y1={y} x2={x - 34} y2={y} color={COLORS.force} head="open" width={4} dashed />
+            <Text x={x - 34 - 150} y={y - 30} color={COLORS.force} size={26}>
+              F cos θ
+            </Text>
+            <Text x={x - 34 - 70} y={y + 40} color={COLORS.kan} size={26}>
+              θ
+            </Text>
+          </g>
+          <g opacity={push}>
+            <Arrow x1={220} y1={y + 90} x2={x} y2={y + 90} color={COLORS.displacement} head="bars" width={4} />
+            <Text x={(220 + x) / 2} y={y + 130} color={COLORS.displacement}>
+              s
+            </Text>
+          </g>
+        </g>
+        <g opacity={pieces}>
+          <path d={`M ${arcC.x - arcR} ${arcC.y} A ${arcR} ${arcR} 0 0 1 ${arcC.x} ${arcC.y - arcR}`} fill="none" stroke={COLORS.chalk} strokeWidth={4} />
+          {Array.from({ length: n }, (_, i) => {
+            const a = ((i + 0.5) / n) * (Math.PI / 2);
+            const px = arcC.x - arcR * Math.cos(a);
+            const py = arcC.y - arcR * Math.sin(a);
+            const len = forcesAt(EXAMPLE, a).tension * 6;
+            const tick = (k: number) => ({ x: arcC.x - (arcR - k) * Math.cos((i / n) * (Math.PI / 2)), y: arcC.y - (arcR - k) * Math.sin((i / n) * (Math.PI / 2)) });
+            const t1 = tick(-14);
+            const t2 = tick(14);
+            return (
+              <g key={i} opacity={fade(local, lineAt(ctx, 4) + i * 0.25, 0.3)}>
+                <line x1={t1.x} y1={t1.y} x2={t2.x} y2={t2.y} stroke={COLORS.displacement} strokeWidth={3} />
+                <Arrow x1={px} y1={py} x2={px + Math.sin(a) * len} y2={py - Math.cos(a) * len} color={COLORS.force} head="open-triangle" width={4} />
+              </g>
+            );
+          })}
+          <Text x={arcC.x - arcR - 40} y={arcC.y - 140} color={COLORS.displacement} size={28} anchor="end">
+            ds
+          </Text>
+        </g>
+      </Svg>
+      {flat > 0.02 && (
+        <div style={{ position: "absolute", left: x - 34, top: y - 34, opacity: flat * Math.max(push, 0.0001) }}>
+          <Kan radius={30} expression="calm" look={{ x: 1, y: 0 }} time={local} />
         </div>
-      </RightCard>
+      )}
+      <MathPanel ctx={ctx} />
     </>
   );
 };
 
 const FBD_PHI = 40 * DEG;
 
-const Fbd: React.FC<SceneProps> = ({ ctx, local }) => {
-  const phi = FBD_PHI;
-  const f = forcesAt(EXAMPLE, phi);
-  const p = blockAt(phi);
-  const down = { x: 0, y: 1 };
-  const out = outward(phi);
-  const up = upSlope(phi);
-  const backDown = { x: -up.x, y: -up.y };
-  const inward = { x: -out.x, y: -out.y };
-  const comps = fade(local, at(ctx, 5) - 0.2, 0.6);
+const Forces: React.FC<SceneProps> = ({ ctx }) => (
+  <>
+    <Board phi={FBD_PHI} local={ctx.local} pullerExpression="calm" />
+    <ForcesAt ctx={ctx} phi={FBD_PHI} />
+    <Block phi={FBD_PHI} local={ctx.local} />
+    <MathPanel ctx={ctx} fontSize={30} />
+  </>
+);
+
+const Slowly: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = climb(ctx.local, lineAt(ctx, 1), ctx.beat.seconds - 1);
   return (
     <>
-      <Board phi={phi} local={local} pullerExpression="calm" />
-      <Svg>
-        <AngleMark phi={phi} opacity={0.8} />
-        <Force from={p} dir={down} newtons={EXAMPLE.m * EXAMPLE.g} label="mg" opacity={fade(local, at(ctx, 1), 0.4)} />
-        <Force from={p} dir={out} newtons={f.normal} label="N" opacity={fade(local, at(ctx, 2), 0.4)} />
-        <Force from={p} dir={backDown} newtons={f.friction} label="f" opacity={fade(local, at(ctx, 3), 0.4)} />
-        <Force from={p} dir={up} newtons={f.tension} label="T" opacity={fade(local, at(ctx, 4), 0.4)} />
-        <g opacity={comps * 0.9}>
-          <Force from={p} dir={inward} newtons={EXAMPLE.m * EXAMPLE.g * Math.sin(phi)} label="" dashed />
-          <Force from={p} dir={backDown} newtons={EXAMPLE.m * EXAMPLE.g * Math.cos(phi)} label="" dashed />
-        </g>
-      </Svg>
-      <Block phi={phi} local={local} expression="calm" />
-      <RightCard opacity={fade(local, at(ctx, 5), 0.5)} fontSize={40}>
-        <div style={{ lineHeight: 2 }}>
-          <div>
-            <Tex tex="N = mg\sin\varphi" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 6), 0.5) }}>
-            <Tex tex="f = \mu N = \mu mg\sin\varphi" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 6), 0.5) }}>
-            <Tex tex={`T = mg\\cos\\varphi + \\mu mg\\sin\\varphi`} />
-          </div>
-        </div>
-        <div style={{ fontSize: 22, color: COLORS.chalkDim, marginTop: 8 }}>arrows drawn to scale for m = 2 kg, μ = 0.5, φ = 40°</div>
-      </RightCard>
+      <Board phi={phi} local={ctx.local} />
+      <Block phi={phi} local={ctx.local} expression="calm" />
+      <MathPanel ctx={ctx} fontSize={30} />
     </>
   );
 };
 
-const Integral: React.FC<SceneProps> = ({ ctx, local }) => {
-  const phi = climb(local, 2, ctx.beat.seconds - 3);
+const Geometry: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = FBD_PHI;
+  const d = 8 * DEG;
+  const a = surface(phi, RP);
+  const b = surface(phi + d, RP);
+  const mid = surface(phi + d / 2, RP + 46);
   return (
     <>
-      <Board phi={phi} local={local} />
+      <Board phi={phi} local={ctx.local} pullerExpression="calm" />
+      <Svg>
+        <AngleMark phi={phi} opacity={shown(ctx, "phi")} />
+        <g opacity={shown(ctx, "ds")}>
+          <path d={`M ${a.x} ${a.y} A ${RP} ${RP} 0 0 1 ${b.x} ${b.y}`} fill="none" stroke={COLORS.displacement} strokeWidth={10} strokeLinecap="round" />
+          <Text x={mid.x} y={mid.y} color={COLORS.displacement}>
+            ds
+          </Text>
+          <line x1={CX} y1={GROUND} x2={b.x} y2={b.y} stroke={COLORS.chalkDim} strokeWidth={2} strokeDasharray="6 8" />
+        </g>
+      </Svg>
+      <Block phi={phi} local={ctx.local} />
+      <MathPanel ctx={ctx} />
+    </>
+  );
+};
+
+const Components: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = FBD_PHI;
+  const p = blockAt(phi);
+  const mg = EXAMPLE.m * EXAMPLE.g;
+  const inward = neg(outward(phi));
+  const down = neg(upSlope(phi));
+  const sinTip = { x: p.x + inward.x * mg * Math.sin(phi) * FORCE_SCALE, y: p.y + inward.y * mg * Math.sin(phi) * FORCE_SCALE };
+  const cosTip = { x: p.x + down.x * mg * Math.cos(phi) * FORCE_SCALE, y: p.y + down.y * mg * Math.cos(phi) * FORCE_SCALE };
+  return (
+    <>
+      <Board phi={phi} local={ctx.local} pullerExpression="calm" />
       <Svg>
         <AngleMark phi={phi} opacity={0.6} />
       </Svg>
-      <Block phi={phi} local={local} expression="excited" />
-      <RightCard opacity={fade(local, at(ctx, 1), 0.5)} fontSize={30} top={90}>
-        <div style={{ lineHeight: 2.2 }}>
-          <div>
-            <Tex tex="dW = T\,ds = T\,R\,d\varphi" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 2), 0.5) }}>
-            <Tex tex="W = \int_0^{\pi/2}(mg\cos\varphi + \mu mg\sin\varphi)\,R\,d\varphi" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 3), 0.5) }}>
-            <Tex tex="= mgR\,\big[\sin\varphi\big]_0^{\pi/2} + \mu mgR\,\big[-\cos\varphi\big]_0^{\pi/2}" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 4), 0.5), fontSize: 42 }}>
-            <Tex tex={`= \\textcolor{${COLORS.displacement}}{mgR(1+\\mu)}`} />
-          </div>
-        </div>
-      </RightCard>
-      <WorkBar phi={phi} opacity={fade(local, 1.5, 0.5)} top={500} />
+      <ForcesAt ctx={ctx} phi={phi} />
+      <Svg>
+        <Text x={sinTip.x + 30} y={sinTip.y + 10} color={COLORS.chalk} size={26} anchor="start" opacity={shown(ctx, "mgsin")}>
+          mg sin φ
+        </Text>
+        <Text x={cosTip.x - 20} y={cosTip.y + 30} color={COLORS.chalk} size={26} anchor="end" opacity={shown(ctx, "mgcos")}>
+          mg cos φ
+        </Text>
+      </Svg>
+      <Block phi={phi} local={ctx.local} />
+      <MathPanel ctx={ctx} fontSize={30} />
     </>
   );
 };
 
-const Insight: React.FC<SceneProps> = ({ ctx, local }) => {
-  const phi = climb(local, at(ctx, 2), at(ctx, 4) + 4);
-  const p = surface(phi);
-  const heightOn = fade(local, at(ctx, 1), 0.5);
-  const horizOn = fade(local, at(ctx, 2), 0.5);
+const Balance: React.FC<SceneProps> = ({ ctx }) => (
+  <>
+    <Board phi={FBD_PHI} local={ctx.local} pullerExpression="calm" />
+    <Svg>
+      <AngleMark phi={FBD_PHI} opacity={0.6} />
+    </Svg>
+    <ForcesAt ctx={ctx} phi={FBD_PHI} />
+    <Block phi={FBD_PHI} local={ctx.local} />
+    <MathPanel ctx={ctx} fontSize={30} />
+    <div style={{ position: "absolute", left: 60, top: 80, fontSize: 22, color: COLORS.chalkDim, opacity: fade(ctx.local, 0.5, 0.5) }}>
+      arrows drawn to scale for m = 2 kg, μ = 0.5, φ = 40°
+    </div>
+  </>
+);
+
+const Derivation: React.FC<SceneProps> = ({ ctx }) => (
+  <>
+    <Board phi={FBD_PHI} local={ctx.local} pullerExpression="calm" />
+    <Svg>
+      <AngleMark phi={FBD_PHI} opacity={0.6} />
+    </Svg>
+    <Block phi={FBD_PHI} local={ctx.local} />
+    <MathPanel ctx={ctx} fontSize={28} />
+  </>
+);
+
+const Answer: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = climb(ctx.local, lineAt(ctx, 2), Math.max(lineEnd(ctx, 2), lineAt(ctx, 2) + 6));
   return (
     <>
-      <Board phi={phi} local={local} />
+      <Board phi={phi} local={ctx.local} />
+      <Block phi={phi} local={ctx.local} expression="excited" />
+      <MathPanel ctx={ctx} fontSize={44} />
+      <WorkBar phi={phi} opacity={fade(ctx.local, lineAt(ctx, 2), 0.5)} top={480} />
+    </>
+  );
+};
+
+const Meaning: React.FC<SceneProps> = ({ ctx }) => {
+  const phi = climb(ctx.local, lineAt(ctx, 2), lineAt(ctx, 2) + 7);
+  const p = surface(phi);
+  return (
+    <>
+      <Board phi={phi} local={ctx.local} />
       <Svg>
-        <g opacity={heightOn}>
-          <Arrow x1={CX - RP - 70} y1={GROUND} x2={CX - RP - 70} y2={GROUND - RP} color={COLORS.displacement} head="bars" width={4} />
-          <Text x={CX - RP - 110} y={GROUND - RP / 2} color={COLORS.displacement} anchor="end">
+        <g opacity={shown(ctx, "height")}>
+          <Arrow x1={CX - RP - 60} y1={GROUND} x2={CX - RP - 60} y2={GROUND - RP} color={COLORS.displacement} head="bars" width={4} />
+          <Text x={CX - RP - 80} y={GROUND - RP / 2} color={COLORS.displacement} anchor="end" size={28}>
             height R
           </Text>
         </g>
-        <g opacity={horizOn}>
+        <g opacity={shown(ctx, "horizontal")}>
           <Arrow x1={CX - RP} y1={GROUND + 40} x2={Math.max(CX - RP + 2, p.x)} y2={GROUND + 40} color={COLORS.kan} head="bars" width={5} />
-          <Text x={CX + RP + 30} y={GROUND + 42} color={COLORS.kan} anchor="start" size={28}>
-            horizontal: {sig3((p.x - (CX - RP)) / RP)} R
+          <Text x={CX - RP} y={GROUND + 80} color={COLORS.kan} anchor="start" size={26}>
+            horizontal distance: {sig3((p.x - (CX - RP)) / RP)} R
           </Text>
         </g>
       </Svg>
-      <Block phi={phi} local={local} expression="excited" />
-      <RightCard opacity={fade(local, at(ctx, 3), 0.5)} fontSize={34}>
-        <div style={{ lineHeight: 2 }}>
-          <div>
-            <Tex tex="dx = ds\,\sin\varphi" />
-          </div>
-          <div>
-            <Tex tex="f\,ds = \mu mg\sin\varphi\,ds = \mu mg\,dx" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 4), 0.5) }}>
-            <Tex tex={`W_\\text{friction} = \\mu mg \\times \\textcolor{${COLORS.kan}}{\\text{horizontal distance}}`} />
-          </div>
-        </div>
-      </RightCard>
+      <Block phi={phi} local={ctx.local} expression="excited" />
+      <MathPanel ctx={ctx} fontSize={30} />
     </>
   );
 };
 
-const Traps: React.FC<SceneProps> = ({ ctx, local }) => {
+const Example: React.FC<SceneProps> = ({ ctx }) => {
+  const { local, values } = ctx;
+  const sim = simulateDrag(EXAMPLE);
+  return (
+    <>
+      <Board phi={90 * DEG} local={local} pullerExpression="proud" />
+      <Block phi={90 * DEG} local={local} expression="proud" />
+      <div style={{ position: "absolute", left: PANEL.left, top: PANEL.top, width: PANEL.width, fontSize: 32, lineHeight: 2 }}>
+        <div style={{ fontSize: 44, fontWeight: 700, marginBottom: 10 }}>With real numbers</div>
+        <div style={{ opacity: fade(local, lineAt(ctx, 0), 0.4) }}>
+          <Tex tex="m = 2\text{ kg},\quad R = 1\text{ m},\quad \mu = 0.5,\quad g = 10\text{ m/s}^2" />
+        </div>
+        <div style={{ opacity: fade(local, lineAt(ctx, 1), 0.4) }}>
+          <Tex tex={`mgR = (2)(10)(1) = ${values.wg}\\text{ J}`} />
+        </div>
+        <div style={{ opacity: fade(local, lineAt(ctx, 1), 0.4) }}>
+          <Tex tex={`\\mu mgR = (0.5)(2)(10)(1) = ${values.wf}\\text{ J}`} />
+        </div>
+        <div style={{ opacity: fade(local, lineAt(ctx, 2), 0.4), fontSize: 44 }}>
+          <Tex tex={`W = \\textcolor{${COLORS.displacement}}{${values.w}\\text{ J}}`} />
+        </div>
+        <div style={{ opacity: fade(local, lineAt(ctx, 3), 0.4), fontSize: 26, color: COLORS.kan, lineHeight: 1.4 }}>
+          Step-by-step simulation: {sig3(sim.byMan)} J (lifting {sig3(-sim.byGravity)} J + friction {sig3(-sim.byFriction)} J)
+        </div>
+      </div>
+    </>
+  );
+};
+
+const Traps: React.FC<SceneProps> = ({ ctx }) => {
+  const { local } = ctx;
   const right = totalWork(EXAMPLE);
   const rows = [
-    { label: "Correct: mgR(1 + μ)", value: right, color: COLORS.displacement, at: 0 },
-    { label: MISTAKES[0].en, value: MISTAKES[0].value(EXAMPLE), color: COLORS.chalkDim, at: at(ctx, 1) },
-    { label: MISTAKES[1].en, value: MISTAKES[1].value(EXAMPLE), color: COLORS.chalkDim, at: at(ctx, 2) },
+    { label: "Correct: mgR(1 + μ)", value: right, color: COLORS.displacement, at: lineAt(ctx, 0) },
+    { label: MISTAKES[0].en, value: MISTAKES[0].value(EXAMPLE), color: COLORS.chalkDim, at: lineAt(ctx, 1) },
+    { label: MISTAKES[1].en, value: MISTAKES[1].value(EXAMPLE), color: COLORS.chalkDim, at: lineAt(ctx, 2) },
   ];
   const max = Math.max(...rows.map((r) => r.value));
   return (
     <>
-      <div style={{ position: "absolute", left: 140, top: 140, fontSize: 60, fontWeight: 700 }}>The traps</div>
+      <div style={{ position: "absolute", left: 140, top: 120, fontSize: 60, fontWeight: 700 }}>Common traps</div>
       {rows.map((r, i) => (
-        <div key={r.label} style={{ position: "absolute", left: 140, top: 270 + i * 160, width: 1640, opacity: fade(local, r.at, 0.5) }}>
+        <div key={r.label} style={{ position: "absolute", left: 140, top: 250 + i * 160, width: 1640, opacity: fade(local, r.at, 0.5) }}>
           <div style={{ fontSize: 34, fontWeight: 700, color: i === 0 ? COLORS.displacement : COLORS.chalk }}>
             {i === 0 ? "✓ " : "✗ "}
             {r.label}
@@ -432,84 +590,44 @@ const Traps: React.FC<SceneProps> = ({ ctx, local }) => {
           </div>
         </div>
       ))}
-      <div style={{ position: "absolute", left: 140, top: 760, fontSize: 24, color: COLORS.chalkDim }}>
-        values for m = 2 kg, R = 1 m, μ = 0.5, g = 10 m/s²
-      </div>
+      <div style={{ position: "absolute", left: 140, top: 740, fontSize: 24, color: COLORS.chalkDim }}>values for m = 2 kg, R = 1 m, μ = 0.5, g = 10 m/s²</div>
     </>
   );
 };
 
-const Example: React.FC<SceneProps> = ({ ctx, local }) => {
-  const sim = simulateDrag(EXAMPLE);
-  return (
-    <>
-      <Board phi={90 * DEG} local={local} pullerExpression="proud" />
-      <Block phi={90 * DEG} local={local} expression="proud" />
-      <RightCard opacity={fade(local, at(ctx, 0), 0.5)} fontSize={32} top={80}>
-        <div style={{ lineHeight: 1.9 }}>
-          <div>
-            <Tex tex="m = 2\text{ kg},\quad R = 1\text{ m}" />
-          </div>
-          <div>
-            <Tex tex="\mu = 0.5,\quad g = 10\text{ m/s}^2" />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 1), 0.5) }}>
-            <Tex tex={`mgR = ${ctx.values.wg}\\text{ J}`} />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 1), 0.5) }}>
-            <Tex tex={`\\mu mgR = ${ctx.values.wf}\\text{ J}`} />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 2), 0.5), fontSize: 44 }}>
-            <Tex tex={`W = \\textcolor{${COLORS.displacement}}{${ctx.values.w}\\text{ J}}`} />
-          </div>
-          <div style={{ opacity: fade(local, at(ctx, 3), 0.5), fontSize: 28, color: COLORS.kan }}>
-            Step-by-step simulation: {sig3(sim.byMan)} J (gravity {sig3(-sim.byGravity)} J + friction {sig3(-sim.byFriction)} J)
-          </div>
-        </div>
-      </RightCard>
-      <WorkBar phi={90 * DEG} opacity={fade(local, at(ctx, 1), 0.5)} top={605} />
-    </>
-  );
-};
-
-const Cta: React.FC<SceneProps> = ({ ctx, local }) => (
+const Recap: React.FC<SceneProps> = ({ ctx }) => (
   <>
-    <Board phi={90 * DEG} local={local} pullerExpression="proud" />
-    <Block phi={90 * DEG} local={local} expression="proud" />
-    <RightCard opacity={fade(local, at(ctx, 0), 0.5)} fontSize={56} top={140}>
-      <div style={{ textAlign: "center" }}>
-        <Tex tex={`W = \\textcolor{${COLORS.displacement}}{mgR(1 + \\mu)}`} />
-      </div>
-      <div style={{ fontSize: 30, marginTop: 18, opacity: fade(local, at(ctx, 1), 0.5) }}>
-        <RichText text="gravity: weight × height · friction: $\mu mg$ × horizontal distance" />
-      </div>
-    </RightCard>
-    <RightCard opacity={fade(local, at(ctx, 2), 0.5)} fontSize={34} top={470}>
-      Comment: smooth dome, does R still matter?
-    </RightCard>
+    <Board phi={90 * DEG} local={ctx.local} pullerExpression="proud" />
+    <Block phi={90 * DEG} local={ctx.local} expression="proud" />
+    <MathPanel ctx={ctx} fontSize={34} />
   </>
 );
 
 const SCENES: Record<BeatId, React.FC<SceneProps>> = {
-  hook: Hook,
-  setup: Setup,
-  fbd: Fbd,
-  integral: Integral,
-  insight: Insight,
-  traps: Traps,
+  question: Question,
+  givens: Givens,
+  work: WorkScene,
+  forces: Forces,
+  slowly: Slowly,
+  geometry: Geometry,
+  components: Components,
+  balance: Balance,
+  setup: Derivation,
+  integrate: Derivation,
+  answer: Answer,
+  meaning: Meaning,
   example: Example,
-  cta: Cta,
+  traps: Traps,
+  recap: Recap,
 };
 
 export const HemisphereCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
     <Board phi={45 * DEG} local={0.4} />
     <Block phi={45 * DEG} local={0.4} expression="scared" />
-    <div style={{ position: "absolute", left: 1220, top: 150, width: 640 }}>
+    <div style={{ position: "absolute", left: 1150, top: 150, width: 700 }}>
       <div style={{ fontSize: 76, fontWeight: 700, lineHeight: 1.05 }}>Work done on a rough dome</div>
-      <div style={{ fontSize: 60, marginTop: 30 }}>
-        <Tex tex={`W = \\textcolor{${COLORS.displacement}}{mgR(1+\\mu)}`} />
-      </div>
+      <div style={{ fontSize: 40, color: COLORS.displacement, marginTop: 24 }}>From zero, step by step</div>
       <div style={{ fontSize: 32, color: COLORS.chalkDim, marginTop: 30 }}>JEE · Work, energy and power</div>
     </div>
   </AbsoluteFill>
