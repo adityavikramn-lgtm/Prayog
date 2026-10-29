@@ -61,7 +61,8 @@
     "render:demo": "node scripts/render.mjs demo",
     "stats": "node scripts/stats.mjs",
     "voice": "tsx scripts/voice.mts",
-    "notes": "tsx scripts/notes.mts"
+    "notes": "tsx scripts/notes.mts",
+    "notes:handwritten": "tsx scripts/notes-handwritten.mts"
   },
   "allowScripts": {
     "esbuild": false
