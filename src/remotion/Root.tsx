@@ -1,4 +1,11 @@
 import { CalculateMetadataFunction, Composition, Still } from "remotion";
+import {
+  HEMI_FPS,
+  HemisphereCover,
+  HemisphereExplainer,
+  HemisphereExplainerProps,
+  hemisphereMetadata,
+} from "../templates/hemisphere/Explainer";
 import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds } from "../pitch/TeacherDemo";
 import {
   COULOMB_FPS,
@@ -91,6 +98,18 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         defaultProps={{ lang: "en" as const }}
       />
+      <Composition
+        id="hemisphere-explainer"
+        component={HemisphereExplainer}
+        schema={HemisphereExplainerProps}
+        durationInFrames={300}
+        fps={HEMI_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={hemisphereMetadata}
+      />
+      <Still id="hemisphere-explainer-cover" component={HemisphereCover} width={1920} height={1080} />
       <Composition
         id="teacher-demo"
         component={TeacherDemo}

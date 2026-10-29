@@ -26,5 +26,9 @@
   "teacher-demo-en": {
     "videoSeconds": 153,
     "renderSeconds": 86
+  },
+  "hemisphere-explainer-en": {
+    "videoSeconds": 330,
+    "renderSeconds": 179
   }
 }

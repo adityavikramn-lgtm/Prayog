@@ -28,6 +28,7 @@ All Remotion packages must stay on the **same exact version**. `overrides.zod` i
 - Voiceover: `public/voice/<template>-<format>-<lang>/<beat>.mp3` (see `public/voice/README.md`).
 - `npm run render:explainer -- coulomb` · `npm run render:demo -- teacher` (pitch video). Run `npm run stats` first so the pitch shows the current test count; render times are recorded automatically in `src/generated/render-times.json`.
 - Writing style for all on-screen text: plain, spoken, human. Short sentences, no hype words.
+- `npm run render:explainer -- hemisphere` — the rough-hemisphere work problem (16:9, ~5.5 min). Voice: `npm run voice -- hemisphere --dry-run` (free), `npm run voice -- voices`, `npm run voice -- hemisphere` (ElevenLabs; key + voice id in `.env.local`, one MP3 per line in `public/voice/hemisphere-explainer-en/`). Each line has `text` (caption) and `say` (what the voice reads); captions and visuals follow the clip lengths (`plan.ts`).
 
 ## Video structure
 Compositions are `<template>-<format>` (+ `-cover` stills, + `projectile-lab`). Words live in `script.ts` (en + hi, `{{placeholders}}` filled from the solver, `$…$` = KaTeX); beat timing in `videoPlan.ts`; text-box positions in `videoLayout.ts` (Short boxes are tested against `SHORTS_SAFE`). Scene building blocks in `parts.tsx` work in both `LANDSCAPE` and `PORTRAIT` (`world.ts`).

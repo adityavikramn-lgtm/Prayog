@@ -41,6 +41,7 @@
     "postcss": "8.5.23",
     "prettier": "3.8.1",
     "tailwindcss": "4.2.0",
+    "tsx": "4.23.15",
     "typescript": "5.9.3",
     "typescript-eslint": "8.71.2",
     "vitest": "5.0.5"
@@ -58,7 +59,8 @@
     "render:short": "node scripts/render.mjs short",
     "render:explainer": "node scripts/render.mjs explainer",
     "render:demo": "node scripts/render.mjs demo",
-    "stats": "node scripts/stats.mjs"
+    "stats": "node scripts/stats.mjs",
+    "voice": "tsx scripts/voice.mts"
   },
   "allowScripts": {
     "esbuild": false

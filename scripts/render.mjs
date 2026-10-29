@@ -31,6 +31,8 @@ const CATALOG = {
     langs: ["en", "hi"],
   },
   teacher: { formats: ["demo"], beats: [], langs: ["en"] },
+  // One voice clip per spoken line (made by `npm run voice -- hemisphere`), not one per beat.
+  hemisphere: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);
@@ -65,6 +67,12 @@ function audioSeconds(file) {
 function findVoice(lang) {
   const folder = `voice/${template}-${format}-${lang}`;
   const voice = {};
+  if (BEATS === "per-line") {
+    const dir = path.join(root, "public", folder);
+    const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp3")) : [];
+    for (const f of files) voice[f.slice(0, -4)] = { src: `${folder}/${f}`, seconds: audioSeconds(path.join(dir, f)) };
+    return voice;
+  }
   for (const beat of BEATS) {
     const rel = `${folder}/${beat}.mp3`;
     const abs = path.join(root, "public", rel);

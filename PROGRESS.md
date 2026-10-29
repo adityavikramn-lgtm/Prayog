@@ -33,11 +33,20 @@
 - `teacher-demo` (16:9, 2 min 33 s, English): the pitch. Problem (a real AI-style slip vs the checked answer) → "AI for language, code for truth" → templates for Vedantu JEE teachers (real scenes playing live; DPP and paste-a-question clearly marked "coming next, not built yet") → 4-step workflow (live formula vs RK4 check) → proof numbers read from `src/generated/stats.json` (`npm run stats`) and `render-times.json` (written by the render script) → weekly offer → "Made by Adithya Vikram for the Vedantu JEE content role". Vedantu appears as text only; no logo, colours or copied layouts; no teacher named.
 - Shared video UI (`src/video/ui.tsx`), Kan +/− charge badge, open-triangle force arrowheads.
 
+### Rough-hemisphere explainer (2026-10-29), from a question the user sent
+- Question (reworded, not copied): block dragged slowly up a rough fixed hemisphere by a string along the surface; work by the man. Answer W = mgR(1 + μ); friction part = μmg × horizontal distance.
+- `src/physics/hemisphere.ts` (forces, W(φ), total), `src/templates/hemisphere/simulate.ts` (independent step-by-step drag: forces from balance, T·ds summed, energy books), tests: worked example 30 J, 50 random cases within 0.1 %, gravity −mgR and friction −μmgR, wrong options (20 J, 35.7 J) tied to named mistakes.
+- `hemisphere-explainer` (16:9, 5 min 30 s without voice, English): hook → setup → free-body diagram (arrows to scale) → integral with a filling work bar → horizontal-distance insight → traps → worked numbers + simulation → recap/CTA. The man's rope keeps its length, so he walks right by the arc the block climbs.
+- Voice: `scripts/voice.mts` (ElevenLabs REST, one MP3 per line, previous/next text for flow; `--dry-run` uses no credits; 3,030 characters). Per-line timing in `plan.ts` so captions and visuals follow the voice.
+
 ## Next
+- Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
 - A Coulomb lab page (`/lab/coulomb`) and a Coulomb Short.
 
 ## Known issues / open questions
+- ElevenLabs: their pricing page lists the commercial licence under the paid Starter plan, not Free. Fine for an application demo; check before monetised or company use.
+- Hemisphere video assumes the string stays tangent to the surface and the string itself slides without friction (stated on screen).
 - Hinglish lines are a draft; a Hindi-speaking teacher should review them before publishing.
 - Shorts safe-zone margins are common practice (YouTube publishes no exact sizes).
 - Remotion warns that it expects zod 4.5.4 exactly; we force 4.6.7 (security fix). Studio and all renders work.
