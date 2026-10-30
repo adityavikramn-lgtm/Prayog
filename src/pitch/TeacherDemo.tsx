@@ -27,7 +27,7 @@ import { solve } from "../templates/projectile/model";
 import { simulateProjectile } from "../templates/projectile/simulate";
 import { buildTimeline } from "../templates/projectile/timeline";
 import { COLORS, SURFACE } from "../theme";
-import { Backdrop, CLAMP, Captions, Card, fade } from "../video/ui";
+import { Backdrop, CLAMP, Captions, Card, Progress, PunchIn, fade } from "../video/ui";
 import { BeatId, DEMO_BEATS, PlannedBeat, Voice, demoSeconds, planDemo } from "./script";
 
 export { demoSeconds };
@@ -80,7 +80,7 @@ export const TeacherDemo: React.FC<TeacherDemoProps> = ({ voice }) => {
           </Sequence>
         );
       })}
-      <Progress beats={plan.beats} total={plan.seconds} />
+      <Progress sections={plan.beats.map((b) => ({ from: b.from, label: CHAPTERS[b.id] }))} total={plan.seconds} />
     </AbsoluteFill>
   );
 };
@@ -96,35 +96,6 @@ const CHAPTERS: Record<BeatId, string> = {
   close: "Thanks",
 };
 
-/** A thin bar across the top that fills as the video plays, plus the current chapter. */
-const Progress: React.FC<{ beats: PlannedBeat[]; total: number }> = ({ beats, total }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const now = frame / fps;
-  const i = Math.max(0, beats.findIndex((b) => now < b.from + b.seconds));
-  return (
-    <>
-      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 8, background: "rgba(255,255,255,0.08)" }}>
-        <div
-          style={{
-            width: `${Math.min(1, now / total) * 100}%`,
-            height: "100%",
-            background: `linear-gradient(90deg, ${COLORS.kan}, ${COLORS.displacement})`,
-            boxShadow: `0 0 14px ${COLORS.kan}`,
-          }}
-        />
-      </div>
-      {beats.map((b, k) =>
-        k === 0 ? null : (
-          <div key={b.id} style={{ position: "absolute", top: 0, left: `${(b.from / total) * 100}%`, width: 3, height: 8, background: COLORS.board }} />
-        ),
-      )}
-      <div style={{ position: "absolute", right: 60, top: 36, fontSize: 26, fontWeight: 700, letterSpacing: 2, color: COLORS.chalkDim, textTransform: "uppercase" }}>
-        <span style={{ color: COLORS.kan }}>{String(i + 1).padStart(2, "0")}</span> / {String(beats.length).padStart(2, "0")} · {CHAPTERS[beats[i].id]}
-      </div>
-    </>
-  );
-};
 
 /**
  * The scenes were timed to the scripted line times. When the voice pushes a line
@@ -143,15 +114,11 @@ const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
   const { fps } = useVideoConfig();
   const local = frame / fps;
   const Scene = SCENES[beat.id];
-  // quick zoom punch-in and soft flash at every new section
-  const punch = interpolate(local, [0, 0.35], [1.04, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
-  const flash = interpolate(local, [0, 0.2], [0.1, 0], CLAMP);
   return (
     <AbsoluteFill>
-      <AbsoluteFill style={{ scale: String(punch) }}>
+      <PunchIn local={local}>
         <Scene local={sceneClock(beat, local)} />
-      </AbsoluteFill>
-      <AbsoluteFill style={{ background: "#fff", opacity: flash, pointerEvents: "none" }} />
+      </PunchIn>
       <Captions cues={beat.lines.map((l) => ({ at: l.at, text: l.text, dur: l.clip?.seconds }))} local={local} box={CAPTION_BOX} fontSize={42} />
     </AbsoluteFill>
   );

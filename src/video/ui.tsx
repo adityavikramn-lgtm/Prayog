@@ -172,3 +172,60 @@ export const Card: React.FC<{
     {children}
   </div>
 );
+
+/** A thin bar across the top that fills as the video plays, with section marks and the current chapter. */
+export const Progress: React.FC<{ sections: { from: number; label: string }[]; total: number }> = ({ sections, total }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const now = frame / fps;
+  const i = Math.max(0, sections.findLastIndex((s) => s.from <= now));
+  return (
+    <>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 8, background: "rgba(255,255,255,0.08)" }}>
+        <div
+          style={{
+            width: `${Math.min(1, now / total) * 100}%`,
+            height: "100%",
+            background: `linear-gradient(90deg, ${COLORS.kan}, ${COLORS.displacement})`,
+            boxShadow: `0 0 14px ${COLORS.kan}`,
+          }}
+        />
+      </div>
+      {sections.slice(1).map((s) => (
+        <div key={s.from} style={{ position: "absolute", top: 0, left: `${(s.from / total) * 100}%`, width: 3, height: 8, background: COLORS.board }} />
+      ))}
+      <div style={{ position: "absolute", right: 60, top: 36, fontSize: 26, fontWeight: 700, letterSpacing: 2, color: COLORS.chalkDim, textTransform: "uppercase" }}>
+        <span style={{ color: COLORS.kan }}>{String(i + 1).padStart(2, "0")}</span> / {String(sections.length).padStart(2, "0")} · {sections[i].label}
+      </div>
+    </>
+  );
+};
+
+/** Wraps a section: a quick zoom punch-in and a soft flash when it starts (`local` = seconds into the section). */
+export const PunchIn: React.FC<{ local: number; children: React.ReactNode }> = ({ local, children }) => {
+  const punch = interpolate(local, [0, 0.35], [1.04, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  const flash = interpolate(local, [0, 0.2], [0.1, 0], CLAMP);
+  return (
+    <>
+      <div style={{ position: "absolute", inset: 0, scale: String(punch) }}>{children}</div>
+      <div style={{ position: "absolute", inset: 0, background: "#fff", opacity: flash, pointerEvents: "none" }} />
+    </>
+  );
+};
+
+/** The section name, big, sliding in at the top-left for the first few seconds of a section. */
+export const ChapterTitle: React.FC<{ local: number; index: number; label: string; hold?: number }> = ({ local, index, label, hold = 3 }) => {
+  const inP = interpolate(local, [0.1, 0.55], [0, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  const outP = interpolate(local, [hold, hold + 0.4], [1, 0], CLAMP);
+  const o = Math.min(inP, outP);
+  if (o <= 0) return null;
+  return (
+    <div style={{ position: "absolute", left: 60, top: 104, display: "flex", alignItems: "center", gap: 22, opacity: o, translate: `${(1 - inP) * -60}px 0` }}>
+      <div style={{ width: 10, height: 64, borderRadius: 5, background: COLORS.kan, boxShadow: `0 0 22px ${COLORS.kan}88` }} />
+      <div>
+        <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: 3, color: COLORS.kan }}>PART {String(index + 1).padStart(2, "0")}</div>
+        <div style={{ fontSize: 54, fontWeight: 800, lineHeight: 1.05 }}>{label}</div>
+      </div>
+    </div>
+  );
+};

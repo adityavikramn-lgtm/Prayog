@@ -20,10 +20,10 @@ import { E_JEE, K_JEE, coulombForce, releaseSpeeds } from "../../physics/coulomb
 import { sig3 } from "../../physics/format";
 import { sceneFont } from "../../sceneFont";
 import { COLORS } from "../../theme";
-import { Backdrop, CLAMP, Captions, Card, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, Card, ChapterTitle, Progress, PunchIn, fade } from "../../video/ui";
 import { SETUPS, lawForce, nullPointFromQ1, probeForce, thirdLawForce, triangleCharges } from "./model";
 import { PlannedBeat, Voice, planCoulomb } from "./plan";
-import { BEATS, BeatId, CARDS, LAW_R_CLOSE, Lang, fill, scriptValues } from "./script";
+import { BEATS, BeatId, CARDS, LAW_R_CLOSE, Lang, fill, lineKey, scriptValues } from "./script";
 import { ReleaseSample, sampleRelease, simulateRelease } from "./simulate";
 
 export const CoulombExplainerProps = z.object({
@@ -72,8 +72,21 @@ export const CoulombExplainer: React.FC<CoulombExplainerProps> = ({ lang, voice 
           </Sequence>
         );
       })}
+      <Progress sections={plan.beats.map((b) => ({ from: b.from, label: CHAPTERS[b.id] }))} total={plan.seconds} />
     </AbsoluteFill>
   );
+};
+
+const CHAPTERS: Record<BeatId, string> = {
+  hook: "The question",
+  charges: "Charges",
+  law: "Coulomb's law",
+  third: "Who pushes harder?",
+  release: "Let them go",
+  superposition: "Superposition",
+  predict: "Your turn",
+  reveal: "The answer",
+  cta: "Recap",
 };
 
 const BeatView: React.FC<{ ctx: Ctx }> = ({ ctx }) => {
@@ -84,12 +97,18 @@ const BeatView: React.FC<{ ctx: Ctx }> = ({ ctx }) => {
   const Scene = SCENES[ctx.beat.id];
   return (
     <AbsoluteFill>
-      <Scene ctx={ctx} local={local} />
+      <PunchIn local={local}>
+        <Scene ctx={ctx} local={local} />
+      </PunchIn>
+      <ChapterTitle local={local} index={BEATS.findIndex((b) => b.id === ctx.beat.id)} label={CHAPTERS[ctx.beat.id]} />
       <div style={{ position: "absolute", left: 60, top: 40, fontSize: 28, color: COLORS.chalkDim }}>
         {CARDS.topic[ctx.lang]} · Coulomb&apos;s law
       </div>
       <Captions
-        cues={lines.map((l) => ({ at: l.at, text: fill(l[ctx.lang], ctx.values) }))}
+        cues={lines.map((l, i) => {
+          const c = ctx.beat.clips.find((x) => x.key === lineKey(ctx.beat.id, i));
+          return { at: l.at, dur: c ? c.clip.seconds / c.rate : undefined, text: fill(l[ctx.lang], ctx.values) };
+        })}
         local={local}
         box={CAPTION_BOX}
         fontSize={46}
