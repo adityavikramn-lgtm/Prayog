@@ -49,8 +49,7 @@ const page1 = `
 <h2 style="--c:${BLUE}">Higher classes: physics</h2>
 <div class="grid">
   ${item("Start Here: how I can help (2:36)", "VIDEO · OVERVIEW", "How I combine AI and code to make checked content, with real examples. Voiced in my own (AI-cloned) voice.", "1. Start Here")}
-  ${item("Coulomb's law: full explainer (4:53)", "VIDEO · CLASS 12", "Voiced lesson with animations and worked numbers.", "2. Concept Lesson")}
-  ${item("Work done on a rough dome: full lesson (13 min)", "VIDEO · JEE", "A hard JEE question, explained step by step from zero.", "3. Problem Solving")}
+  ${item("Work done on a rough dome: full lesson (10 min)", "VIDEO · JEE", "A hard JEE question, explained step by step from zero: forces, splitting the weight, the integral, a second check with energy, and the common traps. In my own (AI-cloned) voice.", "3. Problem Solving")}
   ${item("Short: AI + Physics, checked by code", "VIDEO · 9:16", "A 44-second motion-graphics Short for YouTube and Reels, in my own (AI-cloned) voice.", "5. Short")}
   ${item("Electric charge &amp; Coulomb's law class notes", "PDF · CLASS 12", "Clear class notes with diagrams and solved questions.", "4. Class Notes")}
 </div>
@@ -64,7 +63,7 @@ const page2 = `
   <tr><td><b>Code that checks the maths</b></td><td>Every number is calculated by code, never typed in by hand or taken from AI text. Each answer is checked a second, independent way (for example a simulation, or a different unit route). Right now <b>${stats.testsPassed} of ${stats.testsTotal}</b> automatic checks pass.</td></tr>
   <tr><td><b>Remotion</b> (video made with code)</td><td>Animations where every frame comes from the equations, so motion and sizes are physically correct. One scene can come out as a 16:9 lesson, a 9:16 Short, or in another language.</td></tr>
   <tr><td><b>KaTeX</b></td><td>Clean, correct maths formulas on screen and in PDFs.</td></tr>
-  <tr><td><b>Text-to-speech</b></td><td>The Class 8 video, the Start Here video and the 44-second Short are voiced by an AI copy of <b>my own voice</b>, made with Chatterbox (free, open source, runs on my laptop) from a short recording of me, then cleaned of background noise. The older lessons use the free Windows voice.</td></tr>
+  <tr><td><b>Text-to-speech</b></td><td>Every video is voiced by an AI copy of <b>my own voice</b>, made with Chatterbox (free, open source, runs on my laptop) from a short recording of me, then cleaned of background noise and levelled. A check re-records any line that comes out rushed.</td></tr>
 </table>
 
 <h2 style="--c:${GREEN}">My rule: AI for words, code for numbers</h2>

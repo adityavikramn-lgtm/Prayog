@@ -10,7 +10,7 @@ import { sig3 } from "../../physics/format";
 import { forcesAt, totalWork, workUpTo } from "../../physics/hemisphere";
 import { sceneFont } from "../../sceneFont";
 import { COLORS } from "../../theme";
-import { Backdrop, CLAMP, Captions, Card, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, Card, Confetti, Progress, PunchIn, Sfx, SfxName, fade } from "../../video/ui";
 import { EXAMPLE, MISTAKES } from "./model";
 import { PlannedBeat, Voice, planHemisphere } from "./plan";
 import { BEATS, BeatId, QUESTION, TITLE, fill, scriptValues } from "./script";
@@ -69,9 +69,34 @@ export const HemisphereExplainer: React.FC<HemisphereExplainerProps> = ({ voice 
           </Sequence>
         );
       })}
+      <Progress sections={plan.beats.map((b) => ({ from: b.from, label: BEATS.find((x) => x.id === b.id)!.title }))} total={plan.seconds} />
     </AbsoluteFill>
   );
 };
+
+type SfxCue = [line: number, name: SfxName, volume: number, delay?: number];
+
+/** Signature sounds on the key moments (line index within the section). Kept gentle: this is a long lesson. */
+const KEY_SOUNDS: Partial<Record<BeatId, SfxCue[]>> = {
+  resolve: [[9, "ding", 0.25, 0.4], [11, "ding", 0.25, 0.4]],
+  balance: [[3, "ding", 0.25, 0.4], [7, "ding", 0.3, 0.4]],
+  answer: [[1, "success", 0.4, 0.2]],
+  energy: [[6, "success", 0.35, 0.4]],
+  example: [[3, "ding", 0.3, 0.6]],
+  traps: [[1, "thud", 0.4, 0.2], [2, "thud", 0.4, 0.2]],
+  recap: [[3, "sparkle", 0.3, 0.2]],
+};
+
+/** A whoosh on every new section, a soft pop whenever a new line goes up on the board, plus the key sounds. */
+function beatSounds(beat: PlannedBeat): [number, SfxName, number][] {
+  const script = BEATS.find((b) => b.id === beat.id)!;
+  const cues: [number, SfxName, number][] = beat.id === "question" ? [] : [[0.02, "whoosh", 0.22]];
+  script.lines.forEach((l, i) => {
+    if (l.math) cues.push([beat.lines[i].at + 0.15, "pop", 0.18]);
+  });
+  for (const [i, name, volume, delay = 0] of KEY_SOUNDS[beat.id] ?? []) cues.push([beat.lines[i].at + delay, name, volume]);
+  return cues;
+}
 
 const BeatView: React.FC<{ beat: PlannedBeat; values: Record<string, string> }> = ({ beat, values }) => {
   const frame = useCurrentFrame();
@@ -81,10 +106,16 @@ const BeatView: React.FC<{ beat: PlannedBeat; values: Record<string, string> }> 
   const Scene = SCENES[beat.id];
   return (
     <AbsoluteFill>
-      <Scene ctx={ctx} />
+      <PunchIn local={ctx.local}>
+        <Scene ctx={ctx} />
+      </PunchIn>
+      {beatSounds(beat).map(([t, name, volume], i) => (
+        <Sfx key={i} at={t} name={name} volume={volume} />
+      ))}
+      {beat.id === "answer" && <Confetti local={ctx.local} at={beat.lines[1].at + 0.2} x={960} y={420} count={140} />}
       <div style={{ position: "absolute", left: 60, top: 30, fontSize: 26, color: COLORS.chalkDim }}>{TITLE.topic}</div>
       <Captions
-        cues={script.lines.map((l, i) => ({ at: beat.lines[i].at, text: fill(l.text, values) }))}
+        cues={script.lines.map((l, i) => ({ at: beat.lines[i].at, dur: beat.lines[i].seconds, text: fill(l.text, values) }))}
         local={ctx.local}
         box={{ left: 120, right: 120, bottom: 26 }}
         fontSize={40}

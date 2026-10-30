@@ -86,10 +86,10 @@ describe("rough-dome lesson: words", () => {
 });
 
 describe("rough-dome lesson: timing", () => {
-  it("is a full lesson of 12 to 22 minutes at a calm pace", () => {
+  it("is a focused full lesson of 8 to 16 minutes", () => {
     const s = planHemisphere().seconds;
-    expect(s).toBeGreaterThanOrEqual(12 * 60);
-    expect(s).toBeLessThanOrEqual(22 * 60);
+    expect(s).toBeGreaterThanOrEqual(8 * 60);
+    expect(s).toBeLessThanOrEqual(16 * 60);
   });
 
   it("with a voiceover, lines play one after another and each beat waits for its last line", () => {
