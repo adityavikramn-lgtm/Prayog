@@ -258,7 +258,7 @@ const BrickScene: React.FC<SceneProps> = ({ ctx }) => {
     <Svg>
       <line x1={120} x2={1800} y1={ground} y2={ground} stroke={COLORS.chalkDim} strokeWidth={4} />
       <BrickOnGround cx={560} ground={ground} wCm={flat.aCm} hCm={BRICK.heightCm} footA={flat.aCm} footB={flat.bCm} opacity={show(ctx, 0)} footOpacity={show(ctx, 1)} label="Flat" />
-      <BrickOnGround cx={1320} ground={ground} wCm={end.aCm} hCm={BRICK.lengthCm} footA={end.aCm} footB={end.bCm} opacity={show(ctx, 2)} footOpacity={show(ctx, 2)} label="On end" />
+      <BrickOnGround cx={1320} ground={ground} wCm={end.aCm} hCm={BRICK.lengthCm} footA={end.aCm} footB={end.bCm} opacity={show(ctx, 2)} footOpacity={show(ctx, 2)} label="Standing up" />
       <PressureBar x={300} y={860} value={flat.pressurePa} max={end.pressurePa} width={300} opacity={barShow} grow={grow} />
       <PressureBar x={1060} y={860} value={end.pressurePa} max={end.pressurePa} width={300} opacity={barShow} grow={grow} />
     </Svg>
@@ -267,18 +267,18 @@ const BrickScene: React.FC<SceneProps> = ({ ctx }) => {
 
 const Formula: React.FC<SceneProps> = ({ ctx }) => (
   <>
-    <div style={{ position: "absolute", left: 0, right: 0, top: 260, textAlign: "center", fontSize: 150, opacity: show(ctx, 1), scale: String(0.9 + 0.1 * show(ctx, 1)) }}>
+    <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontSize: 150, opacity: show(ctx, 2), scale: String(0.9 + 0.1 * show(ctx, 2)) }}>
       <Tex tex={`\\textcolor{${PRESSURE}}{P} = \\dfrac{\\textcolor{${FORCE}}{F}}{\\textcolor{${AREA}}{A}}`} />
     </div>
-    <div style={{ position: "absolute", left: 0, right: 0, top: 300, display: "flex", justifyContent: "center", gap: 60, opacity: show(ctx, 0) * (1 - show(ctx, 1)) }}>
-      <div style={{ fontSize: 80, fontWeight: 800, color: PRESSURE }}>pressure</div>
+    <div style={{ position: "absolute", left: 0, right: 0, top: 300, textAlign: "center", fontSize: 90, fontWeight: 800, color: PRESSURE, opacity: show(ctx, 0) * (1 - show(ctx, 2)) }}>
+      pressure
     </div>
-    <div style={{ position: "absolute", left: 0, right: 0, top: 640, display: "flex", justifyContent: "center", gap: 40, fontSize: 40, fontWeight: 700, opacity: show(ctx, 2) }}>
-      <span style={{ color: FORCE }}>F in newtons (N)</span>
-      <span style={{ color: COLORS.chalkDim }}>·</span>
-      <span style={{ color: AREA }}>A in m²</span>
-      <span style={{ color: COLORS.chalkDim }}>·</span>
-      <span style={{ color: PRESSURE }}>1 Pa = 1 N/m²</span>
+    <div style={{ position: "absolute", left: 0, right: 0, top: 640, display: "flex", justifyContent: "center", gap: 50, fontSize: 40, fontWeight: 700, opacity: show(ctx, 1) }}>
+      <span style={{ color: FORCE }}>F = how hard you push (N)</span>
+      <span style={{ color: AREA }}>A = surface it touches (m²)</span>
+    </div>
+    <div style={{ position: "absolute", left: 0, right: 0, top: 730, textAlign: "center", fontSize: 44, fontWeight: 800, color: PRESSURE, opacity: show(ctx, 3) }}>
+      1 pascal (Pa) = 1 N on 1 m²
     </div>
   </>
 );
@@ -299,7 +299,7 @@ const Numbers: React.FC<SceneProps> = ({ ctx }) => {
   return (
     <>
       {row(0, "Lying flat", flat.areaCm2, v.flatM2, v.flatPa, AREA)}
-      {row(1, "On its end", end.areaCm2, v.endM2, v.endPa, PRESSURE)}
+      {row(1, "Standing up", end.areaCm2, v.endM2, v.endPa, PRESSURE)}
       <div style={{ position: "absolute", right: 300, top: 760, fontSize: 56, fontWeight: 800, color: COLORS.displacement, opacity: show(ctx, 1) }}>× {v.ratio}</div>
     </>
   );

@@ -20,36 +20,37 @@ export const BEATS: Beat[] = [
     id: "hook",
     chapter: "A puzzle",
     lines: [
-      { text: "Why does a sharp knife cut an apple so easily," },
-      { text: "but a blunt knife just squashes it?" },
-      { text: "You push just as hard. So what changed?" },
+      { text: "A sharp knife cuts an apple easily." },
+      { text: "A blunt knife only squashes it." },
+      { text: "You push with the same force. So what is different?" },
     ],
   },
   {
     id: "brick",
     chapter: "The brick test",
     lines: [
-      { text: "Let's try it with a brick. It weighs {{weight}} N.", say: "Let's try it with a brick. It weighs {{weight}} newtons." },
+      { text: "Let's test this with a brick. It weighs {{weight}} N.", say: "Let's test this with a brick. It weighs {{weight}} newtons." },
       {
         text: "Lay it flat. Its weight spreads over {{flatCm2}} cm².",
         say: "Lay it flat. Its weight spreads over {{flatCm2}} square centimetres.",
       },
       {
-        text: "Now stand it on its end. Same weight, but only {{endCm2}} cm².",
-        say: "Now stand it on its end. Same weight, but only {{endCm2}} square centimetres.",
+        text: "Now stand it up. Same weight, but now it touches only {{endCm2}} cm².",
+        say: "Now stand it up. Same weight, but now it touches only {{endCm2}} square centimetres.",
       },
-      { text: "Now it presses {{ratio}} times harder on each bit of the ground.", say: "Now it presses {{ratioWord}} times harder on each bit of the ground." },
+      { text: "So each small bit of ground gets {{ratio}} times more push.", say: "So each small bit of ground gets {{ratioWord}} times more push." },
     ],
   },
   {
     id: "formula",
     chapter: "The rule",
     lines: [
-      { text: "That pressing on each bit of area is called pressure." },
-      { text: "$P = \\dfrac{F}{A}$: pressure is force divided by area.", say: "Pressure equals force divided by area." },
+      { text: "The push on each small bit of area is called pressure." },
+      { text: "Force is how hard you push. Area is how much surface it touches." },
+      { text: "$P = \\dfrac{F}{A}$: pressure is force divided by area.", say: "Pressure is force divided by area." },
       {
-        text: "Force in newtons, area in m². So pressure is in N/m², which we call a pascal (Pa).",
-        say: "Force in newtons, area in square metres. So pressure is in newtons per square metre, which we call a pascal.",
+        text: "We measure pressure in pascals (Pa). 1 Pa is 1 N on 1 m².",
+        say: "We measure pressure in pascals. One pascal is one newton on one square metre.",
       },
     ],
   },
@@ -58,12 +59,12 @@ export const BEATS: Beat[] = [
     chapter: "Check with numbers",
     lines: [
       {
-        text: "Flat: {{weight}} N on {{flatM2}} m² gives {{flatPa}} Pa.",
-        say: "Flat: {{weight}} newtons on {{flatM2Say}} square metres gives {{flatPaSay}} pascals.",
+        text: "Lying flat: {{weight}} N ÷ {{flatM2}} m² = {{flatPa}} Pa.",
+        say: "Lying flat: {{weight}} newtons divided by {{flatM2Say}} square metres is {{flatPaSay}} pascals.",
       },
       {
-        text: "On its end: {{weight}} N on {{endM2}} m² gives {{endPa}} Pa. {{ratio}} times more.",
-        say: "On its end: {{weight}} newtons on {{endM2Say}} square metres gives {{endPaSay}} pascals. {{ratioWord}} times more.",
+        text: "Standing up: {{weight}} N ÷ {{endM2}} m² = {{endPa}} Pa. That's {{ratio}} times more.",
+        say: "Standing up: {{weight}} newtons divided by {{endM2Say}} square metres is {{endPaSay}} pascals. That's {{ratioWord}} times more.",
       },
     ],
   },
@@ -71,14 +72,14 @@ export const BEATS: Beat[] = [
     id: "knife",
     chapter: "Back to the knife",
     lines: [
-      { text: "Back to the knife. You push with {{push}} N.", say: "Back to the knife. You push with {{push}} newtons." },
+      { text: "Now back to the knife. You push with {{push}} N.", say: "Now back to the knife. You push with {{push}} newtons." },
       {
-        text: "A sharp edge is only {{sharpMm}} mm wide. That's {{sharpPa}} Pa.",
-        say: "A sharp edge is only {{sharpMmSay}} of a millimetre wide. That's {{sharpPaSay}} pascals.",
+        text: "A sharp edge is very thin: only {{sharpMm}} mm. So the pressure is huge: {{sharpPa}} Pa.",
+        say: "A sharp edge is very thin, only {{sharpMmSay}} of a millimetre. So the pressure is huge: {{sharpPaSay}} pascals.",
       },
       {
-        text: "A blunt edge is {{knifeRatio}} times wider, so the pressure is {{knifeRatio}} times smaller. Not enough to cut.",
-        say: "A blunt edge is {{knifeRatioWord}} times wider, so the pressure is {{knifeRatioWord}} times smaller. Not enough to cut.",
+        text: "A blunt edge is {{knifeRatio}} times wider. So the pressure is {{knifeRatio}} times less. That's not enough to cut.",
+        say: "A blunt edge is {{knifeRatioWord}} times wider. So the pressure is {{knifeRatioWord}} times less. That's not enough to cut.",
       },
     ],
   },
@@ -88,12 +89,12 @@ export const BEATS: Beat[] = [
     lines: [
       { text: "Sometimes we want less pressure. Think of your school bag." },
       {
-        text: "A {{bagN}} N bag on thin straps presses {{thinPa}} Pa into your shoulders.",
-        say: "A {{bagN}} newton bag on thin straps presses {{thinPaSay}} pascals into your shoulders.",
+        text: "A {{bagN}} N bag with thin straps presses on your shoulders with {{thinPa}} Pa.",
+        say: "A {{bagN}} newton bag with thin straps presses on your shoulders with {{thinPaSay}} pascals.",
       },
       {
-        text: "Wide straps spread it out: only {{widePa}} Pa. That's why they hurt less.",
-        say: "Wide straps spread it out: only {{widePaSay}} pascals. That's why they hurt less.",
+        text: "Wide straps spread the weight: only {{widePa}} Pa. That's why they hurt less.",
+        say: "Wide straps spread the weight. Only {{widePaSay}} pascals. That's why they hurt less.",
       },
     ],
   },
@@ -102,8 +103,8 @@ export const BEATS: Beat[] = [
     chapter: "Your turn",
     lines: [
       {
-        text: "Your turn: {{practiceN}} N on {{practiceM2}} m². Pause and work it out.",
-        say: "Your turn: {{practiceN}} newtons on {{practiceM2Say}} square metres. Pause and work it out.",
+        text: "Your turn: {{practiceN}} N on {{practiceM2}} m². Pause the video and try it.",
+        say: "Your turn. {{practiceN}} newtons on {{practiceM2Say}} square metres. Pause the video and try it.",
       },
       { text: "Answer: {{practicePa}} Pa.", say: "The answer is {{practicePaSay}} pascals." },
     ],
@@ -112,8 +113,8 @@ export const BEATS: Beat[] = [
     id: "recap",
     chapter: "Remember",
     lines: [
-      { text: "Small area, big pressure. Big area, small pressure." },
-      { text: "$P = \\dfrac{F}{A}$, measured in pascals.", say: "Pressure equals force divided by area, measured in pascals." },
+      { text: "Small area means big pressure. Big area means small pressure." },
+      { text: "$P = \\dfrac{F}{A}$, measured in pascals.", say: "Pressure is force divided by area. We measure it in pascals." },
     ],
   },
 ];

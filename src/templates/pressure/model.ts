@@ -24,7 +24,7 @@ export const BRICK = {
 /** The brick on two of its faces: lying flat (20 × 10) and standing on its end (10 × 5). */
 export const BRICK_FACES = [
   { id: "flat", label: "Lying flat", aCm: 20, bCm: 10 },
-  { id: "end", label: "On its end", aCm: 10, bCm: 5 },
+  { id: "end", label: "Standing up", aCm: 10, bCm: 5 },
 ].map((f) => {
   const areaCm2 = f.aCm * f.bCm;
   const areaM2 = cm(f.aCm) * cm(f.bCm);

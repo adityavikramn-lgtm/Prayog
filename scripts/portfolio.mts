@@ -64,7 +64,7 @@ const page2 = `
   <tr><td><b>Code that checks the maths</b></td><td>Every number is calculated by code, never typed in by hand or taken from AI text. Each answer is checked a second, independent way (for example a simulation, or a different unit route). Right now <b>${stats.testsPassed} of ${stats.testsTotal}</b> automatic checks pass.</td></tr>
   <tr><td><b>Remotion</b> (video made with code)</td><td>Animations where every frame comes from the equations, so motion and sizes are physically correct. One scene can come out as a 16:9 lesson, a 9:16 Short, or in another language.</td></tr>
   <tr><td><b>KaTeX</b></td><td>Clean, correct maths formulas on screen and in PDFs.</td></tr>
-  <tr><td><b>Text-to-speech</b></td><td>Voiceovers made with the free Windows voice. I'm also testing an open-source tool (Chatterbox) that runs on my laptop and speaks in my own voice.</td></tr>
+  <tr><td><b>Text-to-speech</b></td><td>The Class 8 video is voiced by an AI copy of <b>my own voice</b>, made with Chatterbox (free, open source, runs on my laptop) from a short recording of me. The other videos use the free Windows voice.</td></tr>
 </table>
 
 <h2 style="--c:${GREEN}">My rule: AI for words, code for numbers</h2>
