@@ -30,5 +30,9 @@
   "hemisphere-explainer-en": {
     "videoSeconds": 791.4,
     "renderSeconds": 443
+  },
+  "teacher-short-en": {
+    "videoSeconds": 38.5,
+    "renderSeconds": 25
   }
 }

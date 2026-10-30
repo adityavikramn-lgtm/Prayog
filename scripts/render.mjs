@@ -30,7 +30,8 @@ const CATALOG = {
     beats: "per-line", // one clip per caption line, made by `npm run voice -- coulomb`
     langs: ["en", "hi"],
   },
-  teacher: { formats: ["demo"], beats: "per-line", langs: ["en"] }, // clips from `npm run voice -- teacher`
+  // demo: `npm run voice -- teacher`; short: `npm run voice -- teacher-short`
+  teacher: { formats: ["demo", "short"], beats: "per-line", langs: ["en"] },
   // One voice clip per spoken line (made by `npm run voice -- hemisphere`), not one per beat.
   hemisphere: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
@@ -70,7 +71,14 @@ function findVoice(lang) {
   if (BEATS === "per-line") {
     const dir = path.join(root, "public", folder);
     const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith(".mp3") || f.endsWith(".wav")) : [];
-    for (const f of files) voice[f.slice(0, -4)] = { src: `${folder}/${f}`, seconds: audioSeconds(path.join(dir, f)) };
+    for (const f of files) {
+      const key = f.slice(0, -4);
+      const clip = { src: `${folder}/${f}`, seconds: audioSeconds(path.join(dir, f)) };
+      // Word start times saved by the Windows voice (used for word-by-word captions).
+      const wordsFile = path.join(dir, `${key}.words.json`);
+      if (fs.existsSync(wordsFile)) clip.words = JSON.parse(fs.readFileSync(wordsFile, "utf8"));
+      voice[key] = clip;
+    }
     return voice;
   }
   for (const beat of BEATS) {

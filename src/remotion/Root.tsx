@@ -6,6 +6,8 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
+import { SHORT_FPS, StartShort, StartShortCover, StartShortProps, startShortMetadata } from "../pitch/StartShort";
+import { planShort } from "../pitch/short";
 import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds, teacherDemoMetadata } from "../pitch/TeacherDemo";
 import {
   COULOMB_FPS,
@@ -122,6 +124,18 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={teacherDemoMetadata}
       />
       <Still id="teacher-demo-cover" component={TeacherDemoCover} width={1920} height={1080} />
+      <Composition
+        id="teacher-short"
+        component={StartShort}
+        schema={StartShortProps}
+        durationInFrames={Math.round(planShort().seconds * SHORT_FPS)}
+        fps={SHORT_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={startShortMetadata}
+      />
+      <Still id="teacher-short-cover" component={StartShortCover} width={1080} height={1920} />
       <Still
         id="projectile-explainer-cover"
         component={ProjectileCover}

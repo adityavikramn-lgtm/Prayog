@@ -19,16 +19,19 @@ import path from "node:path";
 import * as coulomb from "../src/templates/coulomb/script";
 import * as hemisphere from "../src/templates/hemisphere/script";
 import * as demo from "../src/pitch/script";
+import * as short from "../src/pitch/short";
 
 /** Where each video's clips go; the render script looks in public/voice/<template>-<format>-<lang>. */
 const FOLDER: Record<string, string> = {
   hemisphere: "hemisphere-explainer-en",
   coulomb: "coulomb-explainer-en",
   teacher: "teacher-demo-en",
+  "teacher-short": "teacher-short-en",
 };
 
 /** Every video that has an English narration: one { key, say } per caption line. */
 const NARRATION: Record<string, () => { key: string; say: string }[]> = {
+  "teacher-short": () => short.SHORT_LINES.map((l, i) => ({ key: short.shortLineKey(i), say: l.say })),
   teacher: () => demo.DEMO_BEATS.flatMap((b) => b.lines.map((l, i) => ({ key: demo.lineKey(b.id, i), say: demo.spoken(l) }))),
   hemisphere: () => {
     const values = hemisphere.scriptValues();

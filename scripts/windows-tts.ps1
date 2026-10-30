@@ -27,6 +27,8 @@ $chosen = [Windows.Media.SpeechSynthesis.SpeechSynthesizer]::AllVoices | Where-O
 if (-not $chosen) { throw "Voice '$Voice' is not installed. Installed: $(([Windows.Media.SpeechSynthesis.SpeechSynthesizer]::AllVoices | ForEach-Object DisplayName) -join ', ')" }
 $synth.Voice = $chosen
 $synth.Options.SpeakingRate = $Rate
+# Ask Windows to report when each word starts, so videos can show words in sync with the voice.
+try { $synth.Options.IncludeWordBoundaryMetadata = $true } catch { }
 
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $lines = Get-Content -Raw -Encoding UTF8 $LinesJson | ConvertFrom-Json
@@ -37,5 +39,16 @@ foreach ($line in $lines) {
   $bytes = New-Object byte[] ([int]$stream.Size)
   $reader.ReadBytes($bytes)
   [IO.File]::WriteAllBytes((Join-Path $OutDir "$($line.key).wav"), $bytes)
-  Write-Output "  ok $($line.key)"
+  # Word timings (seconds from the start of the clip), saved next to the audio when Windows provides them.
+  $words = @()
+  try {
+    foreach ($track in $stream.TimedMetadataTracks) {
+      foreach ($cue in $track.Cues) { $words += [pscustomobject]@{ start = [math]::Round($cue.StartTime.TotalSeconds, 3); text = $cue.Text } }
+    }
+  } catch { }
+  if ($words.Count -gt 0) {
+    $json = ConvertTo-Json -InputObject @($words) -Compress
+    [IO.File]::WriteAllText((Join-Path $OutDir "$($line.key).words.json"), $json, (New-Object Text.UTF8Encoding $false))
+  }
+  Write-Output "  ok $($line.key) ($($words.Count) word times)"
 }
