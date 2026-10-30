@@ -51,7 +51,7 @@ const page1 = `
   ${item("Start Here: how I can help (2:36)", "VIDEO · OVERVIEW", "How I combine AI and code to make checked content, with real examples. Voiced in my own (AI-cloned) voice.", "1. Start Here")}
   ${item("Work done on a rough dome: full lesson (10 min)", "VIDEO · JEE", "A hard JEE question, explained step by step from zero: forces, splitting the weight, the integral, a second check with energy, and the common traps. In my own (AI-cloned) voice.", "3. Problem Solving")}
   ${item("Short: AI + Physics, checked by code", "VIDEO · 9:16", "A 44-second motion-graphics Short for YouTube and Reels, in my own (AI-cloned) voice.", "5. Short")}
-  ${item("Electric charge &amp; Coulomb's law class notes", "PDF · CLASS 12", "Clear class notes with diagrams and solved questions.", "4. Class Notes")}
+  ${item("Rough-dome problem: class notes", "PDF · CLASS 11 · JEE", "Four pages that match the video: diagrams drawn to scale, every step, the energy check, common traps, and 5 practice questions with answers checked by code.", "4. Class Notes")}
 </div>
 `;
 
