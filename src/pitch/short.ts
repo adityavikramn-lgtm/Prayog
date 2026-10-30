@@ -17,6 +17,8 @@ export interface ShortLine {
   accent?: string[];
   /** Words that get the stacked "echo" effect. */
   echo?: string[];
+  /** What the voice reads, when it differs from the words on screen (e.g. numbers spelled out). */
+  voice?: string;
 }
 
 /** The example slip: u = 20 m/s, θ = 30°, g = 10. Using sin θ instead of sin 2θ. */
@@ -33,17 +35,26 @@ export function slip() {
 const s = slip();
 
 export const SHORT_LINES: ShortLine[] = [
-  { say: "AI can solve a physics question in seconds.", visual: "ai", accent: ["ai", "seconds"] },
-  { say: "But sometimes, it's confidently wrong.", visual: "wrong", accent: ["wrong"], echo: ["wrong"] },
-  { say: "It forgets the two in sine two theta.", visual: "formula", accent: ["two"] },
-  { say: `And the answer is off by ${s.diff} metres.`, visual: "number", accent: [s.diff, "metres"] },
+  { say: "You ask AI a physics question. Two seconds later, it's solved.", visual: "ai", accent: ["ai", "seconds"] },
+  { say: "But here's the problem. Sometimes it's confidently wrong.", visual: "wrong", accent: ["wrong"], echo: ["wrong"] },
+  { say: "Look closely. It forgot the two in sine two theta.", visual: "formula", accent: ["two"] },
+  {
+    say: `Now the answer is off by ${s.diff} metres. In JEE, that's marks gone.`,
+    voice: "Now the answer is off by fourteen point six metres. In JEE, that's marks gone.",
+    visual: "number",
+    accent: [s.diff, "marks"],
+  },
   { say: "So I split the job in two.", visual: "split", accent: ["split"] },
-  { say: "AI writes the words.", visual: "words", accent: ["ai", "words"] },
-  { say: "Code checks every number.", visual: "code", accent: ["code", "number"], echo: ["number"] },
-  { say: "The formula and a simulation must agree.", visual: "agree", accent: ["formula", "simulation", "agree"] },
-  { say: "Every week, I can send Shorts, full lessons, and notes.", visual: "deliver", accent: ["shorts", "lessons", "notes"] },
+  { say: "AI writes the words: the story, the captions, the hook.", visual: "words", accent: ["ai", "words"] },
+  { say: "Code checks every single number.", visual: "code", accent: ["code", "number"], echo: ["number"] },
+  {
+    say: "The formula and a real simulation have to agree. If they don't, no student ever sees it.",
+    visual: "agree",
+    accent: ["formula", "simulation", "agree"],
+  },
+  { say: "Shorts, full lessons, and notes. All made this way.", visual: "deliver", accent: ["shorts", "lessons", "notes"] },
   { say: "All original. All checked.", visual: "checked", accent: ["original", "checked"], echo: ["checked"] },
-  { say: "I'm Adithya Vikram. Let's build this together.", visual: "name", accent: ["adithya", "vikram"] },
+  { say: "I'm Adithya Vikram. Let's make physics that students can trust.", visual: "name", accent: ["adithya", "vikram", "trust"] },
 ];
 
 export interface WordTime {

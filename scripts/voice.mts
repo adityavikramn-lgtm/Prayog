@@ -5,7 +5,7 @@
 //   npm run voice -- hemisphere             (make the MP3s that are missing)
 //   npm run voice -- hemisphere --force     (remake all of them)
 //   npm run voice -- hemisphere --engine=windows [--voice="Microsoft Zira"]   (free voice built into Windows, no key)
-//   npm run voice -- hemisphere --engine=clone    (the teacher's own voice, cloned locally from public/voice/my-voice.*)
+//   npm run voice -- hemisphere --engine=clone [--emotion=0.7]   (the teacher's own voice, cloned locally; 0.7 = livelier)
 //   ... --only=open-0,problem-0 --out=renders/voice-test   (just these lines, into another folder: for trying a voice)
 //
 // Needs .env.local (git-ignored, never printed):
@@ -34,8 +34,9 @@ const FOLDER: Record<string, string> = {
 };
 
 /** Every video that has an English narration: one { key, say } per caption line. */
-const NARRATION: Record<string, () => { key: string; say: string }[]> = {
-  "teacher-short": () => short.SHORT_LINES.map((l, i) => ({ key: short.shortLineKey(i), say: l.say })),
+const NARRATION: Record<string, () => { key: string; say: string; show?: string }[]> = {
+  // say = what the voice reads; show = the words on screen (used for word timings).
+  "teacher-short": () => short.SHORT_LINES.map((l, i) => ({ key: short.shortLineKey(i), say: l.voice ?? l.say, show: l.say })),
   teacher: () => demo.DEMO_BEATS.flatMap((b) => b.lines.map((l, i) => ({ key: demo.lineKey(b.id, i), say: demo.spoken(l) }))),
   hemisphere: () => {
     const values = hemisphere.scriptValues();
@@ -108,7 +109,10 @@ async function makeVoice(template: string) {
     const list = path.join("renders", "voice-lines.json");
     fs.mkdirSync("renders", { recursive: true });
     fs.writeFileSync(list, JSON.stringify(todo));
-    const result = spawnSync(python, ["scripts/clone-tts.py", list, outDir, ref], { stdio: "inherit" });
+    // --emotion=0.7 for a livelier, more human delivery (Chatterbox "exaggeration"; 0.5 = neutral).
+    const emotion = flagValue("emotion") ?? "0.5";
+    const cfg = Number(emotion) > 0.6 ? "0.35" : "0.5";
+    const result = spawnSync(python, ["scripts/clone-tts.py", list, outDir, ref, emotion, cfg], { stdio: "inherit" });
     if (result.status !== 0) fail("The cloned voice could not make the clips (see the message above).");
     console.log(`
 Done in your voice. Now render: npm run render:explainer -- ${template}`);
