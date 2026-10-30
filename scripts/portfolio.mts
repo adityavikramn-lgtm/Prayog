@@ -36,23 +36,23 @@ const page1 = `
     "Why does a sharp knife cut? Pressure = force ÷ area",
     "VIDEO · SCIENCE · CLASS 8",
     "An animated lesson (about 2 min): a puzzle hook, a brick drawn to scale, the rule, worked numbers, a knife and school-bag example, a pause-and-try question and a recap. Every size and number is calculated by code.",
-    "00 Class 6–8 samples",
+    "0. Class 6–8 samples (folder)",
   )}
   ${item(
     "Fractions: notes, worksheet and answer key",
     "PDF · MATHS · CLASS 6–7",
     "Two pages of picture-based notes, a 14-question worksheet in 5 sections (from easy to word problems) and a full answer key with working. All answers are computed and double-checked by code.",
-    "00 Class 6–8 samples",
+    "0. Class 6–8 samples (folder)",
   )}
 </div>
 
 <h2 style="--c:${BLUE}">Higher classes: physics</h2>
 <div class="grid">
-  ${item("Start Here: how I can help (2:36)", "VIDEO · OVERVIEW", "How I combine AI and code to make checked content, with real examples. Voiced in my own (AI-cloned) voice.", "Main folder")}
-  ${item("Coulomb's law: full explainer (4:53)", "VIDEO · CLASS 12", "Voiced lesson with animations and worked numbers; also a Hinglish-caption version.", "01 Full lessons")}
-  ${item("Work done on a rough dome: full lesson (13 min)", "VIDEO · JEE", "A hard JEE question, explained step by step from zero.", "01 Full lessons")}
-  ${item("Shorts for YouTube and Reels", "VIDEO · 9:16", "A 44-second motion-graphics Short in my own (AI-cloned) voice, and projectile Shorts in English and Hinglish.", "02 Shorts")}
-  ${item("Electric charge &amp; Coulomb's law notes", "PDF · CLASS 12", "Detailed notes, plus a handwritten-style class-notes version.", "03 Notes")}
+  ${item("Start Here: how I can help (2:36)", "VIDEO · OVERVIEW", "How I combine AI and code to make checked content, with real examples. Voiced in my own (AI-cloned) voice.", "1. Start Here")}
+  ${item("Coulomb's law: full explainer (4:53)", "VIDEO · CLASS 12", "Voiced lesson with animations and worked numbers.", "2. Concept Lesson")}
+  ${item("Work done on a rough dome: full lesson (13 min)", "VIDEO · JEE", "A hard JEE question, explained step by step from zero.", "3. Problem Solving")}
+  ${item("Short: AI + Physics, checked by code", "VIDEO · 9:16", "A 44-second motion-graphics Short for YouTube and Reels, in my own (AI-cloned) voice.", "5. Short")}
+  ${item("Electric charge &amp; Coulomb's law class notes", "PDF · CLASS 12", "Clear class notes with diagrams and solved questions.", "4. Class Notes")}
 </div>
 `;
 
