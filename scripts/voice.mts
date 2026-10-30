@@ -24,6 +24,7 @@ import * as demo from "../src/pitch/script";
 import * as short from "../src/pitch/short";
 import * as pressure from "../src/templates/pressure/script";
 import * as plane from "../src/shorts/plane";
+import * as middle from "../src/shorts/middle";
 
 /** Where each video's clips go; the render script looks in public/voice/<template>-<format>-<lang>. */
 const FOLDER: Record<string, string> = {
@@ -34,6 +35,8 @@ const FOLDER: Record<string, string> = {
   pressure: "pressure-explainer-en",
   "plane-drop": "plane-drop-en",
   "plane-monkey": "plane-monkey-en",
+  "middle-measure": "middle-measure-en",
+  "middle-friction": "middle-friction-en",
 };
 
 /** Every video that has an English narration: one { key, say } per caption line. */
@@ -47,6 +50,8 @@ const NARRATION: Record<string, () => { key: string; say: string; show?: string 
   },
   "plane-drop": () => plane.DROP_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
   "plane-monkey": () => plane.MONKEY_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
+  "middle-measure": () => middle.MEASURE_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
+  "middle-friction": () => middle.FRICTION_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
   pressure: () => {
     const values = pressure.scriptValues();
     return pressure.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: pressure.lineKey(b.id, i), say: pressure.spokenText(line, values) })));
@@ -117,7 +122,12 @@ async function makeVoice(template: string) {
     // --emotion=0.7 for a livelier, more human delivery (Chatterbox "exaggeration"; 0.5 = neutral).
     const emotion = flagValue("emotion") ?? "0.5";
     const cfg = Number(emotion) > 0.6 ? "0.35" : "0.5";
-    const result = spawnSync(python, ["scripts/clone-tts.py", list, outDir, ref, emotion, cfg], { stdio: "inherit" });
+    // --bass=5 adds 5 dB of low end for a deeper, fuller voice (scripts/clean_audio.py).
+    const bassDb = flagValue("bass") ?? "0";
+    const result = spawnSync(python, ["scripts/clone-tts.py", list, outDir, ref, emotion, cfg], {
+      stdio: "inherit",
+      env: { ...process.env, VOICE_BASS_DB: bassDb },
+    });
     if (result.status !== 0) fail("The cloned voice could not make the clips (see the message above).");
     console.log(`
 Done in your voice. Now render: npm run render:explainer -- ${template}`);

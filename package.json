@@ -67,6 +67,7 @@
     "notes:fractions": "tsx scripts/fractions-notes.mts",
     "notes:hemisphere": "tsx scripts/hemisphere-notes.mts",
     "notes:motion-plane": "tsx scripts/motion-plane-notes.mts",
+    "notes:middle": "tsx scripts/middle-notes.mts",
     "deck:motion-plane": "tsx scripts/motion-plane-deck.mts",
     "portfolio": "tsx scripts/portfolio.mts"
   },

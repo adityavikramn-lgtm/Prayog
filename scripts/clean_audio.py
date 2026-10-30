@@ -2,17 +2,21 @@
 # Used by clone-tts.py on every clip; also runs on its own:
 #   .voice-clone/env/Scripts/python.exe scripts/clean_audio.py in.wav out.wav
 
+import os
 import sys
 
 import numpy as np
 import pyloudnorm as pyln
 import soundfile as sf
-from scipy.signal import butter, istft, sosfiltfilt, stft
+from scipy.signal import butter, istft, lfilter, sosfiltfilt, stft
 from scipy.ndimage import uniform_filter
 
 TARGET_LUFS = -16.0  # clear speech level for YouTube
 PEAK = 10 ** (-1.0 / 20)  # keep peaks under -1 dBFS
 FLOOR_DB = -28  # how far the hiss is pushed down (not to zero, which sounds watery)
+# Extra bass for a deeper, fuller voice (dB, low shelf around 180 Hz). Set with VOICE_BASS_DB, e.g. 5.
+BASS_DB = float(os.environ.get("VOICE_BASS_DB", "0"))
+BASS_HZ = 180.0
 
 
 def denoise(x: np.ndarray, sr: int, noise_ref: np.ndarray | None = None) -> np.ndarray:
@@ -38,6 +42,19 @@ def denoise(x: np.ndarray, sr: int, noise_ref: np.ndarray | None = None) -> np.n
     return y[: len(x)]
 
 
+def bass(x: np.ndarray, sr: int, gain_db: float = BASS_DB) -> np.ndarray:
+    """Low-shelf boost (RBJ audio-EQ cookbook biquad): lifts everything below ~BASS_HZ by gain_db."""
+    if gain_db == 0:
+        return x
+    a = 10 ** (gain_db / 40)
+    w0 = 2 * np.pi * BASS_HZ / sr
+    alpha = np.sin(w0) / 2 * np.sqrt((a + 1 / a) * (1 / 0.8 - 1) + 2)
+    cw = np.cos(w0)
+    b = [a * ((a + 1) - (a - 1) * cw + 2 * np.sqrt(a) * alpha), 2 * a * ((a - 1) - (a + 1) * cw), a * ((a + 1) - (a - 1) * cw - 2 * np.sqrt(a) * alpha)]
+    den = [(a + 1) + (a - 1) * cw + 2 * np.sqrt(a) * alpha, -2 * ((a - 1) + (a + 1) * cw), (a + 1) + (a - 1) * cw - 2 * np.sqrt(a) * alpha]
+    return lfilter(np.array(b) / den[0], np.array(den) / den[0], x)
+
+
 def level(x: np.ndarray, sr: int) -> np.ndarray:
     meter = pyln.Meter(sr)
     loud = meter.integrated_loudness(x)
@@ -48,7 +65,7 @@ def level(x: np.ndarray, sr: int) -> np.ndarray:
 
 
 def clean(x: np.ndarray, sr: int) -> np.ndarray:
-    return level(denoise(x, sr), sr)
+    return level(bass(denoise(x, sr), sr), sr)
 
 
 if __name__ == "__main__":

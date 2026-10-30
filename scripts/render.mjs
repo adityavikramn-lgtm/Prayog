@@ -38,6 +38,8 @@ const CATALOG = {
   pressure: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
   // Class 11 Motion in a Plane Shorts, part 1 and 2 (`npm run voice -- plane-drop` / `plane-monkey`).
   plane: { formats: ["drop", "monkey"], beats: "per-line", langs: ["en"] },
+  // Class 6–8 Shorts: measurement (Class 6) and friction (Class 8).
+  middle: { formats: ["measure", "friction"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);

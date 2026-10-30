@@ -46,5 +46,13 @@
   "plane-monkey-en": {
     "videoSeconds": 42.5,
     "renderSeconds": 30
+  },
+  "middle-measure-en": {
+    "videoSeconds": 38.2,
+    "renderSeconds": 27
+  },
+  "middle-friction-en": {
+    "videoSeconds": 47.4,
+    "renderSeconds": 33
   }
 }

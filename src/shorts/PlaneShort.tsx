@@ -89,18 +89,19 @@ const SLOW = 0.5; // slow motion: half speed, shown on screen
 const SVGW = 1080;
 const SVGH = 1920;
 
-const fade = (t: number, start: number, len = 0.3) =>
+export const fade = (t: number, start: number, len = 0.3) =>
   interpolate(t, [start, start + len], [0, 1], CLAMP);
 
 // ---------- shared frame: subtitle, big word, progress, punch-in, sounds ----------
 
-interface SceneCtx {
+export interface SceneCtx {
   t: number; // seconds into the Short
   starts: number[]; // start of each line
   line: number; // current line index
+  lines: PlannedLine[]; // planned lines, with word times
 }
 
-function ShortFrame<V extends string>({
+export function ShortFrame<V extends string>({
   lines,
   voice,
   Scene,
@@ -136,7 +137,7 @@ function ShortFrame<V extends string>({
     >
       <Backdrop />
       <AbsoluteFill style={{ scale: String(punch) }}>
-        <Scene ctx={{ t, starts, line: current }} />
+        <Scene ctx={{ t, starts, line: current, lines: plan.lines }} />
         <Subtitle
           text={lines[current].say}
           line={plan.lines[current]}
@@ -176,7 +177,7 @@ function ShortFrame<V extends string>({
 }
 
 /** Whoosh on each cut, a pop on each key word, plus the scene's own sounds. */
-function baseSounds<V extends string>(
+export function baseSounds<V extends string>(
   line: PlannedLine,
   script: PlaneLine<V>,
   extra: Partial<Record<V, [number, SfxName, number][]>>,
@@ -329,7 +330,7 @@ const BigWord: React.FC<{
 
 // ---------- small drawing pieces ----------
 
-const Card: React.FC<{
+export const Card: React.FC<{
   x: number;
   y: number;
   w: number;
@@ -358,7 +359,7 @@ const Card: React.FC<{
   </div>
 );
 
-const Label: React.FC<{
+export const Label: React.FC<{
   x: number;
   y: number;
   color: string;
@@ -381,7 +382,7 @@ const Label: React.FC<{
   </text>
 );
 
-const Ball: React.FC<{ x: number; y: number; color: string; r?: number }> = ({
+export const Ball: React.FC<{ x: number; y: number; color: string; r?: number }> = ({
   x,
   y,
   color,
