@@ -1,5 +1,6 @@
 import React from "react";
-import { Easing, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { Audio } from "@remotion/media";
+import { Easing, Sequence, interpolate, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { RichText } from "../components/RichText";
 import { Tex } from "../components/Tex";
 import { COLORS, SURFACE } from "../theme";
@@ -227,5 +228,60 @@ export const ChapterTitle: React.FC<{ local: number; index: number; label: strin
         <div style={{ fontSize: 54, fontWeight: 800, lineHeight: 1.05 }}>{label}</div>
       </div>
     </div>
+  );
+};
+
+/** A sound effect from public/sfx, starting `at` seconds into the current sequence. */
+export const Sfx: React.FC<{ at: number; name: SfxName; volume?: number }> = ({ at, name, volume = 0.4 }) => {
+  const { fps } = useVideoConfig();
+  if (at < 0) return null;
+  return (
+    <Sequence from={Math.round(at * fps)} layout="none" name={`sfx ${name}`}>
+      <Audio src={staticFile(`sfx/${name}.wav`)} volume={volume} />
+    </Sequence>
+  );
+};
+export type SfxName = "whoosh" | "pop" | "ding" | "tick" | "success" | "thud" | "swish" | "sparkle";
+
+/** 0 → 1 with a little overshoot: for cards and labels popping in (UI only, never physical objects). */
+export const popIn = (t: number, start: number, length = 0.45) =>
+  interpolate(t, [start, start + length], [0, 1], { ...CLAMP, easing: Easing.out(Easing.back(1.8)) });
+
+/** Small deterministic hash → [0, 1), so the confetti is the same on every render. */
+const hash = (i: number) => {
+  const x = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/** A confetti burst from (x, y) at time `at` (seconds into the sequence). Decoration only. */
+export const Confetti: React.FC<{ local: number; at: number; x: number; y: number; count?: number }> = ({ local, at, x, y, count = 120 }) => {
+  const { width, height } = useVideoConfig();
+  const s = local - at;
+  if (s < 0 || s > 2.6) return null;
+  const colors = [COLORS.kan, COLORS.displacement, COLORS.force, COLORS.velocity, "#b79bff", "#ffffff"];
+  return (
+    <svg width={width} height={height} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      {Array.from({ length: count }, (_, i) => {
+        const a = -Math.PI / 2 + (hash(i) - 0.5) * Math.PI * 1.3;
+        const v = 700 + hash(i + 99) * 900;
+        const px = x + Math.cos(a) * v * s;
+        const py = y + Math.sin(a) * v * s + 0.5 * 1400 * s * s;
+        const spin = (hash(i + 7) - 0.5) * 1440 * s;
+        const o = interpolate(s, [1.8, 2.6], [1, 0], CLAMP);
+        return (
+          <rect
+            key={i}
+            x={px - 11}
+            y={py - 6}
+            width={22}
+            height={12}
+            rx={3}
+            fill={colors[i % colors.length]}
+            opacity={o}
+            transform={`rotate(${spin} ${px} ${py})`}
+          />
+        );
+      })}
+    </svg>
   );
 };

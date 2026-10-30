@@ -8,7 +8,7 @@ import { Tex } from "../../components/Tex";
 import { Kan } from "../../mascot/Kan";
 import { sceneFont } from "../../sceneFont";
 import { COLORS, SURFACE } from "../../theme";
-import { Backdrop, CLAMP, Captions, ChapterTitle, Progress, PunchIn, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, ChapterTitle, Confetti, Progress, PunchIn, Sfx, SfxName, popIn } from "../../video/ui";
 import { BAG, BRICK, BRICK_FACES, KNIFE, PRACTICE, pa } from "./model";
 import { BEATS, BeatId, PlannedBeat, Voice, fill, planPressure, scriptValues } from "./script";
 
@@ -38,7 +38,8 @@ interface Ctx {
   local: number;
 }
 const at = (ctx: Ctx, i: number) => ctx.beat.lines[Math.min(i, ctx.beat.lines.length - 1)].at;
-const show = (ctx: Ctx, i: number) => fade(ctx.local, at(ctx, i), 0.4);
+/** Appears with a small bounce (values a little over 1 for a moment; fine for opacity and scale). */
+const show = (ctx: Ctx, i: number) => popIn(ctx.local, at(ctx, i), 0.5);
 
 /** Class 8: pressure = force ÷ area. Every size, ratio and number comes from model.ts. */
 export const PressureExplainer: React.FC<PressureExplainerProps> = ({ voice }) => {
@@ -83,6 +84,9 @@ const BeatView: React.FC<{ beat: PlannedBeat; values: Record<string, string> }> 
       <PunchIn local={local}>
         <Scene ctx={ctx} />
       </PunchIn>
+      {SOUNDS[beat.id](ctx).map(([t, name, volume], i) => (
+        <Sfx key={i} at={t} name={name} volume={volume} />
+      ))}
       <ChapterTitle local={local} index={index} label={script.chapter} />
       <Captions
         cues={script.lines.map((l, i) => ({ at: beat.lines[i].at, dur: beat.lines[i].seconds, text: fill(l.text, values) }))}
@@ -127,9 +131,18 @@ const PressureBar: React.FC<{ x: number; y: number; value: number; max: number; 
 }) => (
   <g opacity={opacity}>
     <rect x={x} y={y} width={width} height={34} rx={17} fill="rgba(255,255,255,0.07)" />
-    <rect x={x} y={y} width={Math.max(34, (value / max) * width * grow)} height={34} rx={17} fill={PRESSURE} />
+    <rect
+      x={x}
+      y={y}
+      width={Math.max(34, (value / max) * width * grow)}
+      height={34}
+      rx={17}
+      fill={PRESSURE}
+      style={{ filter: `drop-shadow(0 0 ${14 * grow}px ${PRESSURE})` }}
+    />
+    {/* The number counts up with the bar and lands exactly on the computed value. */}
     <text x={x + width + 20} y={y + 27} fill={PRESSURE} fontSize={32} fontWeight={800} fontFamily={sceneFont}>
-      P = {pa(value)} Pa
+      P = {pa(value * grow)} Pa
     </text>
   </g>
 );
@@ -267,7 +280,7 @@ const BrickScene: React.FC<SceneProps> = ({ ctx }) => {
 
 const Formula: React.FC<SceneProps> = ({ ctx }) => (
   <>
-    <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontSize: 150, opacity: show(ctx, 2), scale: String(0.9 + 0.1 * show(ctx, 2)) }}>
+    <div style={{ position: "absolute", left: 0, right: 0, top: 230, textAlign: "center", fontSize: 150, opacity: show(ctx, 2), scale: String(0.9 + 0.1 * show(ctx, 2)), filter: `drop-shadow(0 0 ${glow(ctx.local, at(ctx, 2))}px ${PRESSURE})` }}>
       <Tex tex={`\\textcolor{${PRESSURE}}{P} = \\dfrac{\\textcolor{${FORCE}}{F}}{\\textcolor{${AREA}}{A}}`} />
     </div>
     <div style={{ position: "absolute", left: 0, right: 0, top: 300, textAlign: "center", fontSize: 90, fontWeight: 800, color: PRESSURE, opacity: show(ctx, 0) * (1 - show(ctx, 2)) }}>
@@ -300,7 +313,22 @@ const Numbers: React.FC<SceneProps> = ({ ctx }) => {
     <>
       {row(0, "Lying flat", flat.areaCm2, v.flatM2, v.flatPa, AREA)}
       {row(1, "Standing up", end.areaCm2, v.endM2, v.endPa, PRESSURE)}
-      <div style={{ position: "absolute", right: 300, top: 760, fontSize: 56, fontWeight: 800, color: COLORS.displacement, opacity: show(ctx, 1) }}>× {v.ratio}</div>
+      <div
+        style={{
+          position: "absolute",
+          right: 120,
+          top: 600,
+          fontSize: 72,
+          fontWeight: 900,
+          color: COLORS.displacement,
+          textShadow: `0 0 24px ${COLORS.displacement}`,
+          opacity: popIn(ctx.local, at(ctx, 1) + 0.9, 0.4),
+          scale: String(2.4 - 1.4 * Math.min(1, popIn(ctx.local, at(ctx, 1) + 0.9, 0.4))),
+          rotate: "-8deg",
+        }}
+      >
+        × {v.ratio}
+      </div>
     </>
   );
 };
@@ -404,6 +432,10 @@ const Try: React.FC<SceneProps> = ({ ctx }) => {
           <Tex tex={`P = \\dfrac{${v.practiceN}}{${v.practiceM2}} = \\textcolor{${PRESSURE}}{${pa(PRACTICE.answerPa)}\\,\\text{Pa}}\\ \\textcolor{${COLORS.kan}}{\\checkmark}`} />
         </div>
       </Panel>
+      <div style={{ position: "absolute", left: 1500, top: 560, opacity: show(ctx, 1), scale: String(0.6 + 0.4 * Math.min(1.1, show(ctx, 1))) }}>
+        <Kan radius={70} expression="excited" arms="up" look={{ x: -1, y: -0.3 }} time={ctx.local} />
+      </div>
+      <Confetti local={ctx.local} at={at(ctx, 1)} x={960} y={620} />
     </>
   );
 };
@@ -429,6 +461,71 @@ const Recap: React.FC<SceneProps> = ({ ctx }) => (
     </div>
   </>
 );
+
+/** A soft glow that flares when something appears, then settles (px of blur). */
+const glow = (t: number, start: number) => (t < start ? 0 : 10 + 30 * Math.exp(-(t - start) * 2.5));
+
+type Cue = [at: number, name: SfxName, volume: number];
+const W = 0.28; // whoosh at every new section
+
+/** Sound effects for each section, timed to the lines (seconds into the section). Kept under the voice. */
+const SOUNDS: Record<BeatId, (ctx: Ctx) => Cue[]> = {
+  hook: (c) => [
+    [at(c, 0) + 0.3, "swish", 0.4],
+    [at(c, 1), "pop", 0.4],
+    [at(c, 1) + 1.3, "thud", 0.35],
+    [at(c, 2), "pop", 0.45],
+  ],
+  brick: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "thud", 0.5],
+    [at(c, 1), "pop", 0.4],
+    [at(c, 2), "thud", 0.5],
+    [at(c, 3), "ding", 0.35],
+  ],
+  formula: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "pop", 0.4],
+    [at(c, 1), "pop", 0.4],
+    [at(c, 2), "sparkle", 0.4],
+    [at(c, 3), "ding", 0.3],
+  ],
+  numbers: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "pop", 0.4],
+    [at(c, 1), "pop", 0.4],
+    [at(c, 1) + 0.9, "ding", 0.4],
+  ],
+  knife: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "swish", 0.4],
+    [at(c, 1), "ding", 0.35],
+    [at(c, 2), "pop", 0.4],
+  ],
+  bag: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "pop", 0.4],
+    [at(c, 1), "ding", 0.3],
+    [at(c, 2), "ding", 0.3],
+  ],
+  try: (c) => {
+    const qEnd = at(c, 0) + c.beat.lines[0].seconds;
+    const step = (at(c, 1) - qEnd) / 3;
+    return [
+      [0.05, "whoosh", W],
+      [at(c, 0), "pop", 0.45],
+      [qEnd, "tick", 0.5],
+      [qEnd + step, "tick", 0.5],
+      [qEnd + 2 * step, "tick", 0.5],
+      [at(c, 1), "success", 0.5],
+    ];
+  },
+  recap: (c) => [
+    [0.05, "whoosh", W],
+    [at(c, 0), "pop", 0.4],
+    [at(c, 1), "sparkle", 0.4],
+  ],
+};
 
 const SCENES: Record<BeatId, React.FC<SceneProps>> = {
   hook: Hook,

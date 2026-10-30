@@ -11,9 +11,12 @@ import random
 import sys
 from pathlib import Path
 
+import soundfile as sf
 import torch
 import torchaudio as ta
 from chatterbox.tts import ChatterboxTTS
+
+from clean_audio import clean
 
 lines_path, out_dir, ref = sys.argv[1], Path(sys.argv[2]), sys.argv[3]
 lines = json.loads(Path(lines_path).read_text(encoding="utf-8"))
@@ -22,7 +25,11 @@ out_dir.mkdir(parents=True, exist_ok=True)
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Loading the voice model on {device}...", flush=True)
 model = ChatterboxTTS.from_pretrained(device=device)
-model.prepare_conditionals(ref, exaggeration=0.5)
+# Clone from a cleaned copy of the sample, so the hiss in the recording isn't copied into every line.
+ref_clean = str(Path(ref).with_name("ref-clean.wav"))
+x, sr0 = sf.read(ref)
+sf.write(ref_clean, clean(x if x.ndim == 1 else x.mean(axis=1), sr0), sr0, subtype="PCM_16")
+model.prepare_conditionals(ref_clean, exaggeration=0.5)
 
 PAD_S = 0.08  # a little air before and after each clip
 
@@ -59,6 +66,8 @@ for i, line in enumerate(lines):
     torch.manual_seed(seed)
     random.seed(seed)
     wav = trim(model.generate(line["say"], cfg_weight=0.5, exaggeration=0.5), model.sr)
+    # Remove what's left of the hiss and bring every line to the same loudness.
+    wav = torch.from_numpy(clean(wav[0].cpu().numpy().astype("float64"), model.sr)).float().unsqueeze(0)
     ta.save(str(out_dir / f"{line['key']}.wav"), wav, model.sr)
     seconds = wav.shape[1] / model.sr
     (out_dir / f"{line['key']}.words.json").write_text(json.dumps(word_times(line["say"], seconds)), encoding="utf-8")
