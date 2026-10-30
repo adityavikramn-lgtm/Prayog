@@ -1,3 +1,4 @@
+import { Backdrop } from "../../video/ui";
 import "katex/dist/katex.min.css";
 import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
@@ -74,6 +75,7 @@ export const ProjectileScene: React.FC<ProjectileSceneProps> = (props) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       <SvgLayer layout={LANDSCAPE}>
         <Ground world={world} />
         {!inSweep && (

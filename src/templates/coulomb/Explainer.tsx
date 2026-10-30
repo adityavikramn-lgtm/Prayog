@@ -20,7 +20,7 @@ import { E_JEE, K_JEE, coulombForce, releaseSpeeds } from "../../physics/coulomb
 import { sig3 } from "../../physics/format";
 import { sceneFont } from "../../sceneFont";
 import { COLORS } from "../../theme";
-import { CLAMP, Captions, Card, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, Card, fade } from "../../video/ui";
 import { SETUPS, lawForce, nullPointFromQ1, probeForce, thirdLawForce, triangleCharges } from "./model";
 import { PlannedBeat, Voice, planCoulomb } from "./plan";
 import { BEATS, BeatId, CARDS, LAW_R_CLOSE, Lang, fill, scriptValues } from "./script";
@@ -57,6 +57,7 @@ export const CoulombExplainer: React.FC<CoulombExplainerProps> = ({ lang, voice 
   const values = useMemo(() => scriptValues(), []);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       {plan.beats.map((beat) => {
         const from = Math.round(beat.from * fps);
         const to = Math.round((beat.from + beat.seconds) * fps);
@@ -691,6 +692,7 @@ export const CoulombCover: React.FC<{ lang: Lang }> = ({ lang }) => {
   const x2 = 1300 + (r * 3000) / 2;
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       <Svg>
         <Force x1={x1 - 66} y1={620} x2={x1 - 66 - 200} y2={620} width={8} />
         <Force x1={x2 + 66} y1={620} x2={x2 + 66 + 200} y2={620} width={8} />

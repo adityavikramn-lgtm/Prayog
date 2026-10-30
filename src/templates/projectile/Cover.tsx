@@ -1,3 +1,4 @@
+import { Backdrop } from "../../video/ui";
 import React from "react";
 import { AbsoluteFill } from "remotion";
 import { z } from "zod";
@@ -33,6 +34,7 @@ const ShortCover: React.FC<{ lang: "en" | "hi" }> = ({ lang }) => {
   const len = 300;
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       <SvgLayer layout={PORTRAIT}>
         <Ground world={world} />
         {PAIR.map((th) => {
@@ -70,6 +72,7 @@ const ExplainerCover: React.FC<{ lang: "en" | "hi" }> = ({ lang }) => {
   const apex = stateAt(sol.components, sol.timeToApex);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       <SvgLayer layout={COVER_LANDSCAPE}>
         <Ground world={world} />
         <Trajectory c={sol.components} world={world} tEnd={sol.timeOfFlight} variant="trail" />

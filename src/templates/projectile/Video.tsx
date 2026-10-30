@@ -52,7 +52,7 @@ import {
   scriptValues,
 } from "./script";
 import { sweepAt } from "./timeline";
-import { CLAMP, Captions, Card as SharedCard, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, Card as SharedCard, fade } from "../../video/ui";
 import { BOXES } from "./videoLayout";
 import { PlannedBeat, Voice, cueSeconds, planBeats } from "./videoPlan";
 import { LANDSCAPE, Layout, PORTRAIT, SHORTS_SAFE, World, makeWorld } from "./world";
@@ -96,6 +96,7 @@ export const ProjectileVideo: React.FC<ProjectileVideoProps> = ({ format, lang, 
 
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       {plan.beats.map((beat) => {
         const from = Math.round(beat.from * fps);
         const to = Math.round((beat.from + beat.seconds) * fps);

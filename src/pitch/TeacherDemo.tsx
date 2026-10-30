@@ -27,7 +27,7 @@ import { solve } from "../templates/projectile/model";
 import { simulateProjectile } from "../templates/projectile/simulate";
 import { buildTimeline } from "../templates/projectile/timeline";
 import { COLORS } from "../theme";
-import { CLAMP, Captions, Card, fade } from "../video/ui";
+import { Backdrop, CLAMP, Captions, Card, fade } from "../video/ui";
 import { BeatId, DEMO_BEATS, PlannedBeat, Voice, demoSeconds, planDemo } from "./script";
 
 export { demoSeconds };
@@ -63,6 +63,7 @@ export const TeacherDemo: React.FC<TeacherDemoProps> = ({ voice }) => {
   const plan = planDemo(voice as Voice);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       {plan.beats.map((b) => {
         const start = Math.round(b.from * fps);
         const end = Math.round((b.from + b.seconds) * fps);
@@ -103,7 +104,7 @@ const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
   return (
     <AbsoluteFill>
       <Scene local={sceneClock(beat, local)} />
-      <Captions cues={beat.lines} local={local} box={CAPTION_BOX} fontSize={42} />
+      <Captions cues={beat.lines.map((l) => ({ at: l.at, text: l.text, dur: l.clip?.seconds }))} local={local} box={CAPTION_BOX} fontSize={42} />
     </AbsoluteFill>
   );
 };
@@ -134,9 +135,37 @@ const Embed: React.FC<{
   </div>
 );
 
-const Heading: React.FC<{ text: string; local: number; at?: number; top?: number }> = ({ text, local, at = 0, top = 60 }) => (
-  <div style={{ position: "absolute", left: 100, top, fontSize: 64, fontWeight: 700, opacity: fade(local, at, 0.4) }}>{text}</div>
-);
+/** Section title: a mint bar grows in, then the words slide up beside it. */
+const Heading: React.FC<{ text: string; local: number; at?: number; top?: number }> = ({ text, local, at = 0, top = 60 }) => {
+  const ease = { ...CLAMP, easing: Easing.out(Easing.cubic) };
+  const bar = interpolate(local, [at, at + 0.35], [0, 1], ease);
+  const rise = interpolate(local, [at + 0.1, at + 0.55], [40, 0], ease);
+  return (
+    <div style={{ position: "absolute", left: 100, top, display: "flex", alignItems: "center", gap: 24 }}>
+      <div
+        style={{
+          width: 12,
+          height: 72,
+          borderRadius: 6,
+          background: COLORS.kan,
+          boxShadow: `0 0 24px ${COLORS.kan}88`,
+          transform: `scaleY(${bar})`,
+        }}
+      />
+      <div
+        style={{
+          fontSize: 66,
+          fontWeight: 800,
+          letterSpacing: -0.5,
+          opacity: fade(local, at + 0.1, 0.4),
+          transform: `translateY(${rise}px)`,
+        }}
+      >
+        {text}
+      </div>
+    </div>
+  );
+};
 
 type SceneProps = { local: number };
 
@@ -427,6 +456,7 @@ const SCENES: Record<BeatId, React.FC<SceneProps>> = {
 
 export const TeacherDemoCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
     <div style={{ position: "absolute", left: 120, top: 250 }}>
       <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR JEE TEACHERS</div>
       <div style={{ fontSize: 120, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>{NAME}</div>

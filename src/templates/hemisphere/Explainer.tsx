@@ -10,7 +10,7 @@ import { sig3 } from "../../physics/format";
 import { forcesAt, totalWork, workUpTo } from "../../physics/hemisphere";
 import { sceneFont } from "../../sceneFont";
 import { COLORS } from "../../theme";
-import { CLAMP, Captions, Card, fade } from "../../video/ui";
+import { Backdrop, CLAMP, Captions, Card, fade } from "../../video/ui";
 import { EXAMPLE, MISTAKES } from "./model";
 import { PlannedBeat, Voice, planHemisphere } from "./plan";
 import { BEATS, BeatId, QUESTION, TITLE, fill, scriptValues } from "./script";
@@ -52,6 +52,7 @@ export const HemisphereExplainer: React.FC<HemisphereExplainerProps> = ({ voice 
   const values = useMemo(() => scriptValues(), []);
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
       {plan.beats.map((beat) => {
         const from = Math.round(beat.from * fps);
         const to = Math.round((beat.from + beat.seconds) * fps);
@@ -766,6 +767,7 @@ const SCENES: Record<BeatId, React.FC<SceneProps>> = {
 
 export const HemisphereCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
+      <Backdrop />
     <Board phi={45 * DEG} local={0.4} />
     <Block phi={45 * DEG} local={0.4} expression="scared" />
     <div style={{ position: "absolute", left: 1150, top: 150, width: 700 }}>
