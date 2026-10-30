@@ -49,3 +49,7 @@ public/voice/**/*.mp3
 
 # Copies made for sharing (re-make any time)
 drive-kit/
+
+# Voice cloning: personal voice sample and the local Python tool (never committed)
+public/voice/my-voice*
+/.voice-clone/

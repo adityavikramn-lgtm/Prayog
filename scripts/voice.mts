@@ -5,6 +5,8 @@
 //   npm run voice -- hemisphere             (make the MP3s that are missing)
 //   npm run voice -- hemisphere --force     (remake all of them)
 //   npm run voice -- hemisphere --engine=windows [--voice="Microsoft Zira"]   (free voice built into Windows, no key)
+//   npm run voice -- hemisphere --engine=clone    (the teacher's own voice, cloned locally from public/voice/my-voice.*)
+//   ... --only=open-0,problem-0 --out=renders/voice-test   (just these lines, into another folder: for trying a voice)
 //
 // Needs .env.local (git-ignored, never printed):
 //   ELEVENLABS_API_KEY=...
@@ -20,6 +22,7 @@ import * as coulomb from "../src/templates/coulomb/script";
 import * as hemisphere from "../src/templates/hemisphere/script";
 import * as demo from "../src/pitch/script";
 import * as short from "../src/pitch/short";
+import * as pressure from "../src/templates/pressure/script";
 
 /** Where each video's clips go; the render script looks in public/voice/<template>-<format>-<lang>. */
 const FOLDER: Record<string, string> = {
@@ -27,6 +30,7 @@ const FOLDER: Record<string, string> = {
   coulomb: "coulomb-explainer-en",
   teacher: "teacher-demo-en",
   "teacher-short": "teacher-short-en",
+  pressure: "pressure-explainer-en",
 };
 
 /** Every video that has an English narration: one { key, say } per caption line. */
@@ -36,6 +40,10 @@ const NARRATION: Record<string, () => { key: string; say: string }[]> = {
   hemisphere: () => {
     const values = hemisphere.scriptValues();
     return hemisphere.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: hemisphere.lineKey(b.id, i), say: hemisphere.spokenText(line, values) })));
+  },
+  pressure: () => {
+    const values = pressure.scriptValues();
+    return pressure.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: pressure.lineKey(b.id, i), say: pressure.spokenText(line, values) })));
   },
   coulomb: () => {
     const values = coulomb.spokenValues();
@@ -77,9 +85,10 @@ async function makeVoice(template: string) {
   const source = NARRATION[template];
   if (!source) fail(`No narration script for "${template}" yet. Try: ${Object.keys(NARRATION).join(", ")}`);
   const lines = source();
-  const outDir = path.join("public", "voice", FOLDER[template]);
-  const ext = engine === "windows" ? "wav" : "mp3";
-  const todo = lines.filter((l) => force || !fs.existsSync(path.join(outDir, `${l.key}.${ext}`)));
+  const outDir = flagValue("out") ?? path.join("public", "voice", FOLDER[template]);
+  const ext = engine === "elevenlabs" ? "mp3" : "wav";
+  const only = flagValue("only")?.split(",");
+  const todo = lines.filter((l) => (only ? only.includes(l.key) : force || !fs.existsSync(path.join(outDir, `${l.key}.${ext}`))));
   const chars = todo.reduce((n, l) => n + l.say.length, 0);
 
   console.log(`\n${lines.length} lines in the script, ${todo.length} to make, ${chars} characters.`);
@@ -88,6 +97,23 @@ async function makeVoice(template: string) {
     return;
   }
   if (!todo.length) return console.log("Nothing to do. Use --force to remake them.");
+
+  // Free, offline: the teacher's own voice, cloned by Chatterbox on the local GPU (scripts/clone-tts.py).
+  if (engine === "clone") {
+    const python = path.join(".voice-clone", "env", "Scripts", "python.exe");
+    if (!fs.existsSync(python)) fail("The voice-clone tool is not set up yet (.voice-clone/env).");
+    const ref = path.join(".voice-clone", "ref.wav");
+    if (!fs.existsSync(ref)) fail("Missing .voice-clone/ref.wav (your voice sample, converted to WAV).");
+    for (const f of fs.existsSync(outDir) ? fs.readdirSync(outDir) : []) if (f.endsWith(".mp3")) fs.rmSync(path.join(outDir, f));
+    const list = path.join("renders", "voice-lines.json");
+    fs.mkdirSync("renders", { recursive: true });
+    fs.writeFileSync(list, JSON.stringify(todo));
+    const result = spawnSync(python, ["scripts/clone-tts.py", list, outDir, ref], { stdio: "inherit" });
+    if (result.status !== 0) fail("The cloned voice could not make the clips (see the message above).");
+    console.log(`
+Done in your voice. Now render: npm run render:explainer -- ${template}`);
+    return;
+  }
 
   // Free, offline: a voice built into Windows (one clip per line, same file names as ElevenLabs but .wav).
   if (engine === "windows") {

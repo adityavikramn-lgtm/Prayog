@@ -34,6 +34,8 @@ const CATALOG = {
   teacher: { formats: ["demo", "short"], beats: "per-line", langs: ["en"] },
   // One voice clip per spoken line (made by `npm run voice -- hemisphere`), not one per beat.
   hemisphere: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
+  // Class 8 science: pressure = force ÷ area (`npm run voice -- pressure`).
+  pressure: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);

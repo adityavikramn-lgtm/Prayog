@@ -34,5 +34,9 @@
   "teacher-short-en": {
     "videoSeconds": 38.5,
     "renderSeconds": 28
+  },
+  "pressure-explainer-en": {
+    "videoSeconds": 135.6,
+    "renderSeconds": 93
   }
 }

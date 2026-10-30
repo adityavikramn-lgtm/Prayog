@@ -62,7 +62,9 @@
     "stats": "node scripts/stats.mjs",
     "voice": "tsx scripts/voice.mts",
     "notes": "tsx scripts/notes.mts",
-    "notes:handwritten": "tsx scripts/notes-handwritten.mts"
+    "notes:handwritten": "tsx scripts/notes-handwritten.mts",
+    "notes:fractions": "tsx scripts/fractions-notes.mts",
+    "portfolio": "tsx scripts/portfolio.mts"
   },
   "allowScripts": {
     "esbuild": false

@@ -6,6 +6,7 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
+import { PRESSURE_FPS, PressureCover, PressureExplainer, PressureExplainerProps, pressureMetadata } from "../templates/pressure/Explainer";
 import { SHORT_FPS, StartShort, StartShortCover, StartShortProps, startShortMetadata } from "../pitch/StartShort";
 import { planShort } from "../pitch/short";
 import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds, teacherDemoMetadata } from "../pitch/TeacherDemo";
@@ -112,6 +113,18 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={hemisphereMetadata}
       />
       <Still id="hemisphere-explainer-cover" component={HemisphereCover} width={1920} height={1080} />
+      <Composition
+        id="pressure-explainer"
+        component={PressureExplainer}
+        schema={PressureExplainerProps}
+        durationInFrames={300}
+        fps={PRESSURE_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={pressureMetadata}
+      />
+      <Still id="pressure-explainer-cover" component={PressureCover} width={1920} height={1080} />
       <Composition
         id="teacher-demo"
         component={TeacherDemo}
