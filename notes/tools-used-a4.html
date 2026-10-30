@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tools used – Nadakudhuru Adithya Vikram</title>
+<style>
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../public/fonts/atkinson-400.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../public/fonts/atkinson-700.woff2") format("woff2"); font-weight: 700; }
+  @page { size: A4; margin: 0; }
+  :root { --ink: #14213d; --muted: #5a6585; --line: #dfe4f0; --accent: #12806a; --tint: #eef7f4; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; padding: 20mm 20mm 14mm; display: flex; flex-direction: column; background: #fff; }
+  .kicker { font-size: 10pt; font-weight: 700; letter-spacing: 3px; color: var(--accent); }
+  h1 { font-size: 26pt; margin: 3mm 0 2mm; line-height: 1.1; }
+  .name { font-size: 12.5pt; color: var(--muted); }
+  .name b { color: var(--ink); }
+  .intro { margin: 6mm 0 5mm; font-size: 11.5pt; line-height: 1.55; color: #2b3554; border-top: 1.5px solid var(--line); padding-top: 6mm; }
+  .tool { display: grid; grid-template-columns: 40mm 1fr; gap: 6mm; padding: 3.6mm 4mm; border-bottom: 1.5px solid var(--line); }
+  .tool:last-of-type { border-bottom: none; }
+  .role { font-size: 8.5pt; font-weight: 700; letter-spacing: 1.8px; color: var(--accent); padding-top: 1.6mm; }
+  .t { font-size: 14pt; font-weight: 700; }
+  .t span { font-size: 10.5pt; font-weight: 400; color: var(--muted); }
+  .d { font-size: 10.8pt; line-height: 1.45; color: #2b3554; margin-top: 1.2mm; }
+  .tool.ai { background: var(--tint); border: 1.5px solid #bfe3d8; border-radius: 3mm; margin-bottom: 1mm; }
+  .note { margin-top: 6mm; background: #f6f8fc; border: 1.5px solid var(--line); border-radius: 3mm; padding: 5mm 6mm; font-size: 11pt; line-height: 1.55; }
+  .note b { color: var(--accent); }
+  footer { margin-top: auto; display: flex; justify-content: space-between; font-size: 9pt; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="kicker">TOOLS USED</div>
+  <h1>How this content was made</h1>
+  <div class="name">Prepared by <b>Nadakudhuru Adithya Vikram</b></div>
+
+  <div class="intro">
+    The videos, Shorts, notes and slides in this folder were made with the tools below. AI helped with writing and
+    coding; every number and answer was calculated and checked by code before it was used.
+  </div>
+
+  <div class="tool ai">
+    <div class="role">AI ASSISTANT</div>
+    <div>
+      <div class="t">Claude <span>by Anthropic · model: Claude Opus 5.5</span></div>
+      <div class="d">Used through Claude Code to draft scripts, captions and notes, and to write the code for the animations and the answer checks. I chose the topics and the teaching order, and reviewed everything.</div>
+    </div>
+  </div>
+  <div class="tool">
+    <div class="role">ANIMATION &amp; VIDEO</div>
+    <div>
+      <div class="t">Remotion</div>
+      <div class="d">Videos and Shorts built in code, so every motion on screen follows the physics equations.</div>
+    </div>
+  </div>
+  <div class="tool">
+    <div class="role">ANSWER CHECKING</div>
+    <div>
+      <div class="t">TypeScript + Vitest</div>
+      <div class="d">Every number is calculated by code and checked a second way, such as with a simulation, before it is used.</div>
+    </div>
+  </div>
+  <div class="tool">
+    <div class="role">VOICEOVER</div>
+    <div>
+      <div class="t">Chatterbox <span>open source</span></div>
+      <div class="d">An AI copy of my own voice, made from a short recording of me and run on my own laptop.</div>
+    </div>
+  </div>
+  <div class="tool">
+    <div class="role">MATHS ON SCREEN</div>
+    <div>
+      <div class="t">KaTeX</div>
+      <div class="d">Clear, correctly typeset formulas in the videos and notes.</div>
+    </div>
+  </div>
+  <div class="tool">
+    <div class="role">NOTES &amp; SLIDES</div>
+    <div>
+      <div class="t">PDF &amp; Microsoft PowerPoint</div>
+      <div class="d">Class notes and worksheets as PDFs, and a teacher deck checked in PowerPoint.</div>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>My working rule: AI for words, code for numbers.</b> AI speeds up the writing; the physics and maths are
+    always computed and verified by code, so the content stays accurate.
+  </div>
+  <footer>
+    <span>All content original</span>
+    <span>Nadakudhuru Adithya Vikram · Physics &amp; Science Content</span>
+  </footer>
+</div>
+</body>
+</html>
