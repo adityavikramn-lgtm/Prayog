@@ -78,7 +78,7 @@ export const DEMO_BEATS: Beat[] = [
     id: "weekly",
     seconds: 14,
     lines: [
-      { at: 0.3, text: "Here's what I can send you every week." },
+      { at: 0.3, text: "Here's what I can make for your classes." },
       { at: 8, text: "All original, and every number checked." },
     ],
   },

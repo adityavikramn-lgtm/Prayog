@@ -117,7 +117,7 @@ export const Captions: React.FC<{
           flexWrap: "wrap",
           justifyContent: "center",
           alignItems: "baseline",
-          columnGap: "0.32em",
+          columnGap: "0.42em",
         }}
       >
         {words.map((w, k) => {
@@ -130,7 +130,7 @@ export const Captions: React.FC<{
               style={{
                 display: "inline-block",
                 color,
-                scale: isNow ? "1.08" : "1",
+                scale: isNow ? "1.04" : "1",
                 textShadow: isNow ? `0 0 18px ${COLORS.displacement}88` : "none",
               }}
             >

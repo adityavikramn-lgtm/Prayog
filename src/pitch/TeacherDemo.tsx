@@ -26,7 +26,7 @@ import { ProjectileVideo } from "../templates/projectile/Video";
 import { solve } from "../templates/projectile/model";
 import { simulateProjectile } from "../templates/projectile/simulate";
 import { buildTimeline } from "../templates/projectile/timeline";
-import { COLORS } from "../theme";
+import { COLORS, SURFACE } from "../theme";
 import { Backdrop, CLAMP, Captions, Card, fade } from "../video/ui";
 import { BeatId, DEMO_BEATS, PlannedBeat, Voice, demoSeconds, planDemo } from "./script";
 
@@ -80,7 +80,49 @@ export const TeacherDemo: React.FC<TeacherDemoProps> = ({ voice }) => {
           </Sequence>
         );
       })}
+      <Progress beats={plan.beats} total={plan.seconds} />
     </AbsoluteFill>
+  );
+};
+
+const CHAPTERS: Record<BeatId, string> = {
+  open: "Intro",
+  problem: "The problem",
+  principle: "The idea",
+  templates: "Templates",
+  workflow: "How it works",
+  proof: "Proof",
+  weekly: "What I can make",
+  close: "Thanks",
+};
+
+/** A thin bar across the top that fills as the video plays, plus the current chapter. */
+const Progress: React.FC<{ beats: PlannedBeat[]; total: number }> = ({ beats, total }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const now = frame / fps;
+  const i = Math.max(0, beats.findIndex((b) => now < b.from + b.seconds));
+  return (
+    <>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: 8, background: "rgba(255,255,255,0.08)" }}>
+        <div
+          style={{
+            width: `${Math.min(1, now / total) * 100}%`,
+            height: "100%",
+            background: `linear-gradient(90deg, ${COLORS.kan}, ${COLORS.displacement})`,
+            boxShadow: `0 0 14px ${COLORS.kan}`,
+          }}
+        />
+      </div>
+      {beats.map((b, k) =>
+        k === 0 ? null : (
+          <div key={b.id} style={{ position: "absolute", top: 0, left: `${(b.from / total) * 100}%`, width: 3, height: 8, background: COLORS.board }} />
+        ),
+      )}
+      <div style={{ position: "absolute", right: 60, top: 36, fontSize: 26, fontWeight: 700, letterSpacing: 2, color: COLORS.chalkDim, textTransform: "uppercase" }}>
+        <span style={{ color: COLORS.kan }}>{String(i + 1).padStart(2, "0")}</span> / {String(beats.length).padStart(2, "0")} · {CHAPTERS[beats[i].id]}
+      </div>
+    </>
   );
 };
 
@@ -101,9 +143,15 @@ const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
   const { fps } = useVideoConfig();
   const local = frame / fps;
   const Scene = SCENES[beat.id];
+  // quick zoom punch-in and soft flash at every new section
+  const punch = interpolate(local, [0, 0.35], [1.04, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  const flash = interpolate(local, [0, 0.2], [0.1, 0], CLAMP);
   return (
     <AbsoluteFill>
-      <Scene local={sceneClock(beat, local)} />
+      <AbsoluteFill style={{ scale: String(punch) }}>
+        <Scene local={sceneClock(beat, local)} />
+      </AbsoluteFill>
+      <AbsoluteFill style={{ background: "#fff", opacity: flash, pointerEvents: "none" }} />
       <Captions cues={beat.lines.map((l) => ({ at: l.at, text: l.text, dur: l.clip?.seconds }))} local={local} box={CAPTION_BOX} fontSize={42} />
     </AbsoluteFill>
   );
@@ -409,22 +457,57 @@ const Proof: React.FC<SceneProps> = ({ local }) => {
   );
 };
 
+/** What I can make: four cards that pop in one by one. No counts or schedule promised. */
 const Weekly: React.FC<SceneProps> = ({ local }) => {
-  const items = [
-    "3 Shorts on your current chapter, in English and Hinglish",
-    "1 full explainer video",
-    "1 live simulation to use in class",
-    "Practice questions with worked solutions (once the question engine is done)",
+  const items: [string, string, string, string][] = [
+    ["▶", "Shorts", "for YouTube and Reels, English or Hinglish", COLORS.kan],
+    ["🎬", "Full lessons", "step by step, from zero to the answer", COLORS.displacement],
+    ["◎", "Live simulations", "to screen-share in class", COLORS.velocity],
+    ["✎", "Class notes", "clear PDFs that match the videos", COLORS.force],
   ];
   return (
     <>
-      <Heading text="Every week" local={local} />
-      {items.map((it, i) => (
-        <div key={it} style={{ position: "absolute", left: 140, top: 210 + i * 130, fontSize: 46, opacity: fade(local, 1 + i * 1.3, 0.4), display: "flex", gap: 24 }}>
-          <span style={{ color: COLORS.kan, fontWeight: 700 }}>{i + 1}</span>
-          <span>{it}</span>
-        </div>
-      ))}
+      <Heading text="What I can make" local={local} />
+      {items.map(([icon, title, sub, color], i) => {
+        const start = 1 + i * 0.9;
+        const p = interpolate(local, [start, start + 0.45], [0, 1], { ...CLAMP, easing: Easing.out(Easing.back(1.6)) });
+        return (
+          <div
+            key={title}
+            style={{
+              position: "absolute",
+              left: 100 + (i % 2) * 870,
+              top: 220 + Math.floor(i / 2) * 290,
+              width: 830,
+              opacity: Math.min(1, p * 1.5),
+              scale: String(0.85 + 0.15 * p),
+            }}
+          >
+            <div style={{ background: SURFACE, border: `3px solid ${color}`, borderRadius: 28, display: "flex", alignItems: "center", gap: 34, padding: "34px 40px", boxShadow: `0 0 36px ${color}33` }}>
+              <div
+                style={{
+                  width: 120,
+                  height: 120,
+                  borderRadius: 28,
+                  background: `${color}22`,
+                  color,
+                  fontSize: 64,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                {icon}
+              </div>
+              <div>
+                <div style={{ fontSize: 56, fontWeight: 800, color }}>{title}</div>
+                <div style={{ fontSize: 34, color: COLORS.chalkDim, marginTop: 6 }}>{sub}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
     </>
   );
 };
