@@ -18,8 +18,8 @@ import { Kan } from "../mascot/Kan";
 import { sig3 } from "../physics/format";
 import { sceneFont } from "../sceneFont";
 import { solve } from "../templates/projectile/model";
-import { COLORS } from "../theme";
-import { CLAMP } from "../video/ui";
+import { COLORS, SURFACE } from "../theme";
+import { Backdrop, CLAMP } from "../video/ui";
 import { PlannedShortLine, SHORT_LINES, ShortVoice, bare, planShort, shortLineKey, slip } from "./short";
 
 /**
@@ -49,7 +49,7 @@ export const startShortMetadata: CalculateMetadataFunction<StartShortProps> = ({
 });
 
 const W = 1080;
-const BG = "#0a0f0d";
+const BG = COLORS.board;
 const MINT = COLORS.kan;
 const YELLOW = COLORS.displacement;
 const RED = "#ff5a52";
@@ -65,7 +65,7 @@ export const StartShort: React.FC<StartShortProps> = ({ voice }) => {
   const plan = planShort(voice as ShortVoice);
   return (
     <AbsoluteFill style={{ backgroundColor: BG, color: "#fff", fontFamily: sceneFont }}>
-      <Grid />
+      <Backdrop />
       {plan.lines.map((l) => {
         const from = Math.round(l.from * fps);
         const next = plan.lines[l.index + 1];
@@ -77,31 +77,20 @@ export const StartShort: React.FC<StartShortProps> = ({ voice }) => {
           </Sequence>
         );
       })}
+      <Progress total={plan.seconds} />
     </AbsoluteFill>
   );
 };
 
-/** A faint grid that drifts slowly upwards, like squared paper under a camera. */
-const Grid: React.FC = () => {
+/** A thin bar along the top that fills up as the Short plays. */
+const Progress: React.FC<{ total: number }> = ({ total }) => {
   const frame = useCurrentFrame();
-  const step = 96;
-  const off = (frame * 0.6) % step;
+  const { fps } = useVideoConfig();
+  const p = Math.min(1, frame / fps / total);
   return (
-    <svg width={W} height={1920} style={{ position: "absolute", inset: 0 }}>
-      {Array.from({ length: 13 }, (_, i) => (
-        <line key={`v${i}`} x1={i * step - 36} y1={0} x2={i * step - 36} y2={1920} stroke="rgba(255,255,255,0.07)" strokeWidth={2} />
-      ))}
-      {Array.from({ length: 22 }, (_, i) => (
-        <line key={`h${i}`} x1={0} y1={i * step - off} x2={W} y2={i * step - off} stroke="rgba(255,255,255,0.07)" strokeWidth={2} />
-      ))}
-      <defs>
-        <radialGradient id="vignette" cx="50%" cy="45%" r="70%">
-          <stop offset="55%" stopColor="rgba(0,0,0,0)" />
-          <stop offset="100%" stopColor="rgba(0,0,0,0.75)" />
-        </radialGradient>
-      </defs>
-      <rect width={W} height={1920} fill="url(#vignette)" />
-    </svg>
+    <div style={{ position: "absolute", left: 54, right: 130, top: 300, height: 10, borderRadius: 5, background: "rgba(255,255,255,0.12)" }}>
+      <div style={{ width: `${p * 100}%`, height: "100%", borderRadius: 5, background: `linear-gradient(90deg, ${MINT}, ${YELLOW})`, boxShadow: `0 0 16px ${MINT}` }} />
+    </div>
   );
 };
 
@@ -112,25 +101,85 @@ const LineScene: React.FC<{ line: PlannedShortLine }> = ({ line }) => {
   const script = SHORT_LINES[line.index];
   const at = (word: string) => line.words.find((w) => bare(w.text) === word)?.start ?? 0;
   const Visual = VISUALS[script.visual];
+  // a quick zoom punch-in and light flash at every new line
+  const punch = interpolate(t, [0, 0.3], [1.07, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  const flash = interpolate(t, [0, 0.18], [0.16, 0], CLAMP);
   return (
     <AbsoluteFill>
-      <div
-        style={{
-          position: "absolute",
-          left: 90,
-          right: 150,
-          top: 300,
-          textAlign: "center",
-          fontSize: 34,
-          color: "rgba(255,255,255,0.75)",
-          opacity: fadeIn(t, 0),
-        }}
-      >
-        {script.say}
-      </div>
-      <Visual t={t} at={at} />
-      <BigWord line={line} t={t} />
+      <AbsoluteFill style={{ scale: String(punch) }}>
+        <Subtitle line={line} t={t} />
+        <Visual t={t} at={at} />
+        <BigWord line={line} t={t} />
+      </AbsoluteFill>
+      <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
+  );
+};
+
+/** The full line at the top; each word lights up as it is spoken. */
+const Subtitle: React.FC<{ line: PlannedShortLine; t: number }> = ({ line, t }) => {
+  // Show the script's own words (with punctuation); the voice's word times only say how far along we are.
+  const words = SHORT_LINES[line.index].say.split(/\s+/);
+  const spoken = line.words.filter((w) => w.start <= t).length;
+  const shown = line.words.length ? Math.ceil((spoken * words.length) / line.words.length) : words.length;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 70,
+        right: 146,
+        top: 350,
+        textAlign: "center",
+        fontSize: 40,
+        fontWeight: 700,
+        lineHeight: 1.35,
+        opacity: fadeIn(t, 0),
+      }}
+    >
+      {words.map((w, i) => {
+        const now = i === shown - 1;
+        const said = i < shown;
+        return (
+          <span
+            key={i}
+            style={{
+              color: now ? YELLOW : said ? "#fff" : "rgba(255,255,255,0.45)",
+              textShadow: now ? `0 0 18px ${YELLOW}88` : undefined,
+            }}
+          >
+            {w}{" "}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
+
+/** A ring of sparks that bursts out once from (x, y), starting at `start`. Deterministic. */
+const Burst: React.FC<{ t: number; start: number; color: string; x: number; y: number }> = ({ t, start, color, x, y }) => {
+  const k = interpolate(t, [start, start + 0.45], [0, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  if (k <= 0 || k >= 1) return null;
+  return (
+    <svg width={W} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      {Array.from({ length: 12 }, (_, i) => {
+        const a = (i / 12) * Math.PI * 2;
+        const r1 = 190 + 240 * k;
+        const r0 = r1 - 70 * (1 - k);
+        return (
+          <line
+            key={i}
+            x1={x + Math.cos(a) * r0 * 1.6}
+            y1={y + Math.sin(a) * r0 * 0.75}
+            x2={x + Math.cos(a) * r1 * 1.6}
+            y2={y + Math.sin(a) * r1 * 0.75}
+            stroke={color}
+            strokeWidth={8}
+            strokeLinecap="round"
+            opacity={1 - k}
+          />
+        );
+      })}
+    </svg>
   );
 };
 
@@ -160,7 +209,7 @@ const BigWord: React.FC<{ line: PlannedShortLine; t: number }> = ({ line, t }) =
   return (
     <>
       {echo &&
-        [-2, -1, 1, 2].map((k) => (
+        [-1, 1, 2].map((k) => (
           <div
             key={k}
             style={{
@@ -174,17 +223,32 @@ const BigWord: React.FC<{ line: PlannedShortLine; t: number }> = ({ line, t }) =
             {word}
           </div>
         ))}
+      {accent && <Burst t={t} start={current.start} color={color} x={502} y={WORD_Y + size / 2} />}
       <div
         style={{
           ...style,
           top: WORD_Y,
-          color,
           scale: String(1.25 - 0.25 * p),
           opacity: Math.min(1, p * 1.5),
-          textShadow: accent ? `0 0 28px ${color}, 0 0 60px ${color}66` : "0 6px 24px rgba(0,0,0,0.6)",
         }}
       >
-        {word}
+        <span
+          style={
+            accent
+              ? {
+                  color: BG,
+                  background: color,
+                  padding: "6px 26px 0",
+                  borderRadius: 18,
+                  display: "inline-block",
+                  rotate: `${-2 * p}deg`,
+                  boxShadow: `0 0 40px ${color}aa, 0 14px 0 ${color}44`,
+                }
+              : { color, textShadow: "0 6px 24px rgba(0,0,0,0.6)" }
+          }
+        >
+          {word}
+        </span>
       </div>
     </>
   );
@@ -203,7 +267,7 @@ const Center: React.FC<{ scale?: number; children: React.ReactNode; y?: number }
 const Card: React.FC<{ children: React.ReactNode; color?: string; style?: React.CSSProperties }> = ({ children, color = "rgba(255,255,255,0.25)", style }) => (
   <div
     style={{
-      background: "rgba(20,30,27,0.92)",
+      background: SURFACE,
       border: `3px solid ${color}`,
       borderRadius: 32,
       padding: "28px 36px",
@@ -441,7 +505,7 @@ const VISUALS: Record<(typeof SHORT_LINES)[number]["visual"], React.FC<VisualPro
 
 export const StartShortCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: BG, color: "#fff", fontFamily: sceneFont }}>
-    <Grid />
+    <Backdrop />
     <div style={{ position: "absolute", left: 70, right: 150, top: 420, textAlign: "center" }}>
       <div style={{ fontFamily: display, fontSize: 170, lineHeight: 1, color: MINT, textShadow: `0 0 40px ${MINT}` }}>AI + PHYSICS</div>
       <div style={{ fontFamily: display, fontSize: 120, lineHeight: 1.1, marginTop: 30 }}>CHECKED BY CODE</div>
