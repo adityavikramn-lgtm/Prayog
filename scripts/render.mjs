@@ -36,6 +36,8 @@ const CATALOG = {
   hemisphere: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
   // Class 8 science: pressure = force ÷ area (`npm run voice -- pressure`).
   pressure: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
+  // Class 11 Motion in a Plane Shorts, part 1 and 2 (`npm run voice -- plane-drop` / `plane-monkey`).
+  plane: { formats: ["drop", "monkey"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);

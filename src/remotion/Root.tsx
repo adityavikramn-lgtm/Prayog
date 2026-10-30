@@ -7,6 +7,7 @@ import {
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
 import { PRESSURE_FPS, PressureCover, PressureExplainer, PressureExplainerProps, pressureMetadata } from "../templates/pressure/Explainer";
+import { DropCover, DropShort, MonkeyCover, MonkeyShort, PLANE_FPS, PlaneShortProps, dropMetadata, monkeyMetadata } from "../shorts/PlaneShort";
 import { SHORT_FPS, StartShort, StartShortCover, StartShortProps, startShortMetadata } from "../pitch/StartShort";
 import { planShort } from "../pitch/short";
 import { DEMO_FPS, TeacherDemo, TeacherDemoCover, TeacherDemoProps, demoSeconds, teacherDemoMetadata } from "../pitch/TeacherDemo";
@@ -149,6 +150,30 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={startShortMetadata}
       />
       <Still id="teacher-short-cover" component={StartShortCover} width={1080} height={1920} />
+      <Composition
+        id="plane-drop"
+        component={DropShort}
+        schema={PlaneShortProps}
+        durationInFrames={300}
+        fps={PLANE_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={dropMetadata}
+      />
+      <Still id="plane-drop-cover" component={DropCover} width={1080} height={1920} />
+      <Composition
+        id="plane-monkey"
+        component={MonkeyShort}
+        schema={PlaneShortProps}
+        durationInFrames={300}
+        fps={PLANE_FPS}
+        width={1080}
+        height={1920}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={monkeyMetadata}
+      />
+      <Still id="plane-monkey-cover" component={MonkeyCover} width={1080} height={1920} />
       <Still
         id="projectile-explainer-cover"
         component={ProjectileCover}

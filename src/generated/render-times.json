@@ -38,5 +38,13 @@
   "pressure-explainer-en": {
     "videoSeconds": 131.1,
     "renderSeconds": 125
+  },
+  "plane-drop-en": {
+    "videoSeconds": 42.6,
+    "renderSeconds": 30
+  },
+  "plane-monkey-en": {
+    "videoSeconds": 42.5,
+    "renderSeconds": 30
   }
 }
