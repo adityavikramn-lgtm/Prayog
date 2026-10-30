@@ -80,12 +80,25 @@ def word_times(text: str, x, sr: int) -> list:
     return out
 
 
+MAX_WORDS_PER_S = 3.8  # faster than this usually means the model skipped words: take it again
+
+
+def take(text: str, seed: int) -> torch.Tensor:
+    torch.manual_seed(seed)
+    random.seed(seed)
+    return trim(model.generate(text, cfg_weight=CFG, exaggeration=EXAGGERATION), model.sr)
+
+
 for i, line in enumerate(lines):
     # Same line → same seed → same take, so a re-run doesn't change clips that were fine.
     seed = sum(ord(c) for c in line["key"] + line["say"]) % (2**31)
-    torch.manual_seed(seed)
-    random.seed(seed)
-    wav = trim(model.generate(line["say"], cfg_weight=CFG, exaggeration=EXAGGERATION), model.sr)
+    words = len(line["say"].split())
+    for attempt in range(4):
+        wav = take(line["say"], seed + attempt * 7919)
+        rate = words / (wav.shape[1] / model.sr)
+        if rate <= MAX_WORDS_PER_S or words <= 4:
+            break
+        print(f"  retake {line['key']}: {rate:.1f} words/s looks rushed or cut", flush=True)
     # Remove what's left of the hiss and bring every line to the same loudness.
     wav = torch.from_numpy(clean(wav[0].cpu().numpy().astype("float64"), model.sr)).float().unsqueeze(0)
     ta.save(str(out_dir / f"{line['key']}.wav"), wav, model.sr)

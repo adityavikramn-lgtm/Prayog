@@ -27,7 +27,7 @@ import { solve } from "../templates/projectile/model";
 import { simulateProjectile } from "../templates/projectile/simulate";
 import { buildTimeline } from "../templates/projectile/timeline";
 import { COLORS, SURFACE } from "../theme";
-import { Backdrop, CLAMP, Captions, Card, Progress, PunchIn, fade } from "../video/ui";
+import { Backdrop, CLAMP, Captions, Card, Confetti, Progress, PunchIn, Sfx, SfxName, fade, popIn } from "../video/ui";
 import { BeatId, DEMO_BEATS, PlannedBeat, Voice, demoSeconds, planDemo } from "./script";
 
 export { demoSeconds };
@@ -46,7 +46,7 @@ export const TeacherDemoProps = z.object({
 export type TeacherDemoProps = z.infer<typeof TeacherDemoProps>;
 export const DEMO_FPS = 30;
 
-const TOPICS = ["Projectile motion", "Coulomb's law"];
+const TOPICS = ["Fractions (Class 6–7)", "Pressure (Class 8)", "Projectile motion", "Coulomb's law", "Work on a rough dome (JEE)"];
 const NAME = "Adithya Vikram";
 type Timing = { videoSeconds: number; renderSeconds: number };
 const times = renderTimes as Record<string, Timing | undefined>;
@@ -109,6 +109,30 @@ function sceneClock(beat: PlannedBeat, local: number): number {
   return interpolate(local, from, to, CLAMP);
 }
 
+/** The reverse of sceneClock: when (seconds into the beat) a scene moment `t` is shown. */
+function sceneToLocal(beat: PlannedBeat, t: number): number {
+  const script = DEMO_BEATS.find((b) => b.id === beat.id)!;
+  const from = [0, ...beat.lines.map((l) => l.at), beat.seconds];
+  const to = [0, ...script.lines.map((l) => l.at), script.seconds];
+  return interpolate(t, to, from, CLAMP);
+}
+
+type SfxCue = [at: number, name: SfxName, volume: number];
+/** Overall effects level for this video: effects sit under a continuous voice, so a little lower than in the Short. */
+const SFX_LEVEL = 0.8;
+
+/** Sound effects for each section, kept well under the voice. Times are in scene time (see sceneClock). */
+const SOUNDS: Record<BeatId, SfxCue[]> = {
+  open: [[0.15, "sparkle", 0.35]],
+  problem: [[0.3, "pop", 0.35], [7.6, "thud", 0.45], [8.6, "ding", 0.3]],
+  principle: [[0.3, "swish", 0.35], [3, "pop", 0.35], [8.5, "pop", 0.35], [9.3, "ding", 0.3]],
+  templates: [[6, "pop", 0.3], [13, "pop", 0.3], [20, "pop", 0.3], [27, "pop", 0.25]],
+  workflow: [[3, "pop", 0.3], [7, "pop", 0.3], [15, "pop", 0.3], [16, "success", 0.4], [23, "pop", 0.3], [31, "pop", 0.3]],
+  proof: [[0.6, "pop", 0.35], [1.6, "ding", 0.3], [1.4, "pop", 0.3], [2.2, "pop", 0.3], [3, "pop", 0.3]],
+  weekly: [[1, "pop", 0.35], [1.9, "pop", 0.35], [2.8, "pop", 0.35], [3.7, "pop", 0.35], [8, "sparkle", 0.35]],
+  close: [[0.3, "success", 0.45]],
+};
+
 const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -119,6 +143,11 @@ const BeatView: React.FC<{ beat: PlannedBeat }> = ({ beat }) => {
       <PunchIn local={local}>
         <Scene local={sceneClock(beat, local)} />
       </PunchIn>
+      {beat.id !== "open" && <Sfx at={0.02} name="whoosh" volume={0.25 * SFX_LEVEL} />}
+      {SOUNDS[beat.id].map(([t, name, volume], i) => (
+        <Sfx key={i} at={sceneToLocal(beat, t)} name={name} volume={volume * SFX_LEVEL} />
+      ))}
+      {beat.id === "close" && <Confetti local={local} at={sceneToLocal(beat, 0.4)} x={960} y={420} count={140} />}
       <Captions cues={beat.lines.map((l) => ({ at: l.at, text: l.text, dur: l.clip?.seconds }))} local={local} box={CAPTION_BOX} fontSize={42} />
     </AbsoluteFill>
   );
@@ -187,7 +216,7 @@ type SceneProps = { local: number };
 const Open: React.FC<SceneProps> = ({ local }) => (
   <>
     <div style={{ position: "absolute", left: 140, top: 250, opacity: fade(local, 0.1, 0.5) }}>
-      <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR JEE TEACHERS</div>
+      <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR SCIENCE &amp; MATHS TEACHERS</div>
       <div style={{ fontSize: 130, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>{NAME}</div>
       <div style={{ fontSize: 50, color: COLORS.displacement, marginTop: 24, maxWidth: 980 }}>
         AI-assisted lessons, checked by real physics.
@@ -381,43 +410,84 @@ const Workflow: React.FC<SceneProps> = ({ local }) => {
   );
 };
 
-const Stat: React.FC<{ value: string; label: string; opacity: number; left: number; top: number }> = ({ value, label, opacity, left, top }) => (
-  <div style={{ position: "absolute", left, top, width: 820, opacity }}>
-    <div style={{ fontSize: 96, fontWeight: 700, color: COLORS.displacement, lineHeight: 1 }}>{value}</div>
-    <div style={{ fontSize: 34, marginTop: 10 }}>{label}</div>
-  </div>
-);
+/** A big number in a glowing card. Numbers count up from 0 and land exactly on the real value. */
+const Stat: React.FC<{ local: number; at: number; value: number; render: (v: number) => string; label: string; sub?: string; left: number; top: number; color: string }> = ({
+  local,
+  at,
+  value,
+  render,
+  label,
+  sub,
+  left,
+  top,
+  color,
+}) => {
+  const p = popIn(local, at, 0.5);
+  const k = interpolate(local, [at + 0.1, at + 1.1], [0, 1], { ...CLAMP, easing: Easing.out(Easing.cubic) });
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left,
+        top,
+        width: 780,
+        padding: "28px 36px",
+        borderRadius: 28,
+        background: SURFACE,
+        border: `3px solid ${color}`,
+        boxShadow: `0 0 ${18 + 30 * (1 - k)}px ${color}55`,
+        opacity: Math.min(1, p),
+        scale: String(0.85 + 0.15 * p),
+      }}
+    >
+      <div style={{ fontSize: 100, fontWeight: 800, color, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{render(value * k)}</div>
+      <div style={{ fontSize: 34, marginTop: 12, fontWeight: 700 }}>{label}</div>
+      {sub && <div style={{ fontSize: 24, marginTop: 6, color: COLORS.chalkDim }}>{sub}</div>}
+    </div>
+  );
+};
 
 const Proof: React.FC<SceneProps> = ({ local }) => {
   const short = times["projectile-short-en"];
-  const explainer = times["coulomb-explainer-en"];
+  const lesson = times["coulomb-explainer-en"];
+  const whole = (v: number) => String(Math.round(v));
   return (
     <>
       <Heading text="Proof, not promises" local={local} />
       <Stat
+        local={local}
+        at={0.6}
         left={100}
-        top={220}
-        opacity={fade(local, 0.6, 0.4)}
-        value={`${stats.testsPassed}/${stats.testsTotal}`}
-        label={stats.allPassed ? `automated checks passing (${stats.generatedOn})` : "automated checks: some failing, needs review"}
+        top={200}
+        color={stats.allPassed ? COLORS.kan : COLORS.force}
+        value={stats.testsPassed}
+        render={(v) => `${Math.round(v)}/${stats.testsTotal}`}
+        label={stats.allPassed ? "automatic checks passing" : "automatic checks: some failing, needs review"}
+        sub={`last run ${stats.generatedOn}`}
       />
-      <Stat left={1000} top={220} opacity={fade(local, 1.4, 0.4)} value={String(TOPICS.length)} label={`topics ready: ${TOPICS.join(", ")}`} />
+      <Stat local={local} at={1.4} left={1000} top={200} color={COLORS.displacement} value={TOPICS.length} render={whole} label="topics ready, Class 6 to JEE" sub={TOPICS.join(" · ")} />
       {short && (
         <Stat
+          local={local}
+          at={2.2}
           left={100}
-          top={520}
-          opacity={fade(local, 2.2, 0.4)}
-          value={`${short.renderSeconds} s`}
-          label={`to render a ${Math.round(short.videoSeconds)} s Short on my laptop`}
+          top={560}
+          color={COLORS.velocity}
+          value={short.renderSeconds}
+          render={(v) => `${Math.round(v)} s`}
+          label={`to make a ${Math.round(short.videoSeconds)} s Short on my laptop`}
         />
       )}
-      {explainer && (
+      {lesson && (
         <Stat
+          local={local}
+          at={3}
           left={1000}
-          top={520}
-          opacity={fade(local, 3, 0.4)}
-          value={`${explainer.renderSeconds} s`}
-          label={`to render a ${sig3(explainer.videoSeconds / 60)} min explainer`}
+          top={560}
+          color={COLORS.force}
+          value={lesson.renderSeconds}
+          render={(v) => `${Math.round(v)} s`}
+          label={`to make a ${(lesson.videoSeconds / 60).toFixed(1)} min full lesson`}
         />
       )}
     </>
@@ -484,8 +554,8 @@ const Close: React.FC<SceneProps> = ({ local }) => (
     <div style={{ position: "absolute", left: 0, right: 0, top: 200, textAlign: "center", opacity: fade(local, 0.2, 0.5) }}>
       <div style={{ fontSize: 40, color: COLORS.chalkDim }}>Made by</div>
       <div style={{ fontSize: 110, fontWeight: 700, marginTop: 10 }}>{NAME}</div>
-      <div style={{ fontSize: 44, color: COLORS.displacement, marginTop: 20 }}>for the Vedantu JEE content role</div>
-      <div style={{ fontSize: 30, color: COLORS.chalkDim, marginTop: 30 }}>Built for JEE teachers · all content original</div>
+      <div style={{ fontSize: 44, color: COLORS.displacement, marginTop: 20 }}>for the Vedantu content role</div>
+      <div style={{ fontSize: 30, color: COLORS.chalkDim, marginTop: 30 }}>Built for teachers, Class 6 to JEE · all content original</div>
     </div>
     <div style={{ position: "absolute", left: 1500, top: 560, opacity: fade(local, 0.8, 0.5) }}>
       <Kan radius={70} expression="proud" arms="out" look={{ x: -1, y: -0.2 }} time={local} />
@@ -508,7 +578,7 @@ export const TeacherDemoCover: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: COLORS.board, color: COLORS.chalk, fontFamily: sceneFont }}>
       <Backdrop />
     <div style={{ position: "absolute", left: 120, top: 250 }}>
-      <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR JEE TEACHERS</div>
+      <div style={{ fontSize: 34, color: COLORS.chalkDim, letterSpacing: 3 }}>FOR SCIENCE &amp; MATHS TEACHERS</div>
       <div style={{ fontSize: 120, fontWeight: 700, lineHeight: 1.05, marginTop: 10 }}>{NAME}</div>
       <div style={{ fontSize: 52, color: COLORS.displacement, marginTop: 24, maxWidth: 1000 }}>
         AI content that's checked by real physics
