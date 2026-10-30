@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tools behind the content</title>
+<style>
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../public/fonts/atkinson-400.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Atkinson Hyperlegible"; src: url("../public/fonts/atkinson-700.woff2") format("woff2"); font-weight: 700; }
+  @font-face { font-family: Anton; src: url("../public/fonts/anton-400.woff2") format("woff2"); }
+  :root {
+    --board: #0b1022; --raised: #151d3a; --line: #2a3560; --chalk: #f5f7ff; --dim: #a3aed0;
+    --blue: #4cc3ff; --orange: #ffb21f; --pink: #ff72b0; --yellow: #ffe24a; --mint: #4ef0c4; --violet: #b79bff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    width: 1920px; height: 1080px; overflow: hidden; color: var(--chalk);
+    font-family: "Atkinson Hyperlegible", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(ellipse at 50% 20%, rgba(24,36,90,.75), transparent 60%),
+      linear-gradient(rgba(160,180,255,.06) 2px, transparent 2px) 0 0 / 96px 96px,
+      linear-gradient(90deg, rgba(160,180,255,.06) 2px, transparent 2px) 0 0 / 96px 96px,
+      var(--board);
+    padding: 44px 60px 48px;
+    display: flex; flex-direction: column;
+  }
+  header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 26px; }
+  .kicker { font-size: 20px; font-weight: 700; letter-spacing: 4px; color: var(--mint); }
+  h1 { font-family: Anton, Impact, sans-serif; font-size: 68px; line-height: 1; margin: 6px 0 0; letter-spacing: 1px; }
+  .rule { text-align: right; }
+  .rule .big { font-size: 30px; font-weight: 700; }
+  .rule .big b:first-child { color: var(--mint); }
+  .rule .big b:last-child { color: var(--yellow); }
+  .rule .small { color: var(--dim); font-size: 18px; margin-top: 4px; }
+
+  .hero { display: flex; gap: 22px; align-items: center; background: rgba(78,240,196,.08); border: 2px solid var(--mint); border-radius: 22px; padding: 18px 26px; margin-bottom: 22px; box-shadow: 0 0 40px rgba(78,240,196,.15); }
+  .hero .logo { width: 74px; height: 74px; border-radius: 50%; background: var(--mint); color: var(--board); display: flex; align-items: center; justify-content: center; font-family: Anton, sans-serif; font-size: 40px; flex-shrink: 0; }
+  .hero .t { font-size: 30px; font-weight: 700; }
+  .hero .t span { color: var(--mint); }
+  .hero .d { font-size: 19px; color: var(--dim); margin-top: 4px; }
+  .hero .me { margin-left: auto; text-align: right; font-size: 18px; color: var(--dim); }
+  .hero .me b { display: block; font-size: 24px; color: var(--chalk); }
+
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 22px; flex: 1; }
+  .card { background: rgba(21,29,58,.92); border: 3px solid var(--line); border-radius: 22px; padding: 18px 26px; position: relative; }
+  .card h2 { margin: 0 0 10px; font-size: 27px; display: flex; align-items: center; gap: 12px; }
+  .num { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: var(--board); flex-shrink: 0; }
+  .card ul { list-style: none; margin: 0; padding: 0; }
+  .card li { font-size: 21px; line-height: 1.36; margin: 5px 0; color: var(--chalk); }
+  .card li b { font-weight: 700; }
+  .card li i { font-style: normal; color: var(--dim); display: block; font-size: 18px; }
+  .c1 { border-color: var(--mint); } .c1 .num { background: var(--mint); } .c1 h2 { color: var(--mint); }
+  .c2 { border-color: var(--yellow); } .c2 .num { background: var(--yellow); } .c2 h2 { color: var(--yellow); }
+  .c3 { border-color: var(--blue); } .c3 .num { background: var(--blue); } .c3 h2 { color: var(--blue); }
+  .c4 { border-color: var(--pink); } .c4 .num { background: var(--pink); } .c4 h2 { color: var(--pink); }
+  .c5 { border-color: var(--orange); } .c5 .num { background: var(--orange); } .c5 h2 { color: var(--orange); }
+  .c6 { border-color: var(--violet); } .c6 .num { background: var(--violet); } .c6 h2 { color: var(--violet); }
+  .c7 { border-color: #7fd1ff; } .c7 .num { background: #7fd1ff; } .c7 h2 { color: #7fd1ff; }
+  .c8 { border-color: var(--dim); } .c8 .num { background: var(--dim); } .c8 h2 { color: var(--chalk); }
+
+  footer { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; color: var(--dim); font-size: 18px; }
+  .stats { display: flex; gap: 28px; }
+  .stats div b { color: var(--chalk); font-size: 22px; margin-right: 6px; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="kicker">ADITHYA VIKRAM · CONTENT PORTFOLIO</div>
+      <h1>THE TOOLS BEHIND THE CONTENT</h1>
+    </div>
+    <div class="rule">
+      <div class="big"><b>AI for words</b> · <b>code for numbers</b></div>
+      <div class="small">every answer is computed and checked a second way before it is shown</div>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="logo">AI</div>
+    <div>
+      <div class="t">AI assistant: <span>Claude</span> by Anthropic · model <span>Claude Opus 5.5</span></div>
+      <div class="d">used through Claude Code (desktop app) to draft scripts, captions and notes, write the animation, voice and checking code, and review every frame</div>
+    </div>
+    <div class="me">I direct the work<b>topics · order · review</b></div>
+  </div>
+
+  <div class="flow">
+    <div class="card c1">
+      <h2><span class="num">1</span>Script &amp; words</h2>
+      <ul>
+        <li><b>Claude Opus 5.5</b> <i>drafts, simple English</i></li>
+        <li><b>My edits</b> <i>tone, order, examples</i></li>
+        <li><b>NCERT / JEE syllabus</b> <i>topic map</i></li>
+      </ul>
+    </div>
+    <div class="card c2">
+      <h2><span class="num">2</span>Truth: maths checks</h2>
+      <ul>
+        <li><b>TypeScript solvers</b> <i>every number</i></li>
+        <li><b>Simulations</b> <i>RK4 &amp; step-by-step</i></li>
+        <li><b>Vitest</b> <i>324 automatic checks</i></li>
+        <li><b>zod</b> <i>validates all data</i></li>
+      </ul>
+    </div>
+    <div class="card c3">
+      <h2><span class="num">3</span>Animation &amp; video</h2>
+      <ul>
+        <li><b>Remotion 4</b> <i>video made with React</i></li>
+        <li><b>React 19 · SVG</b> <i>physics-true scenes</i></li>
+        <li><b>KaTeX</b> <i>maths on screen</i></li>
+        <li><b>FFmpeg</b> <i>H.264 export</i></li>
+      </ul>
+    </div>
+    <div class="card c4">
+      <h2><span class="num">4</span>Voice (my own)</h2>
+      <ul>
+        <li><b>Chatterbox TTS</b> <i>open-source voice clone</i></li>
+        <li><b>PyTorch 2.6 + CUDA</b> <i>on my RTX 3050</i></li>
+        <li><b>My 33 s recording</b> <i>the voice source</i></li>
+        <li><b>Windows TTS</b> <i>first drafts</i></li>
+      </ul>
+    </div>
+    <div class="card c5">
+      <h2><span class="num">5</span>Sound</h2>
+      <ul>
+        <li><b>Noise removal</b> <i>NumPy + SciPy</i></li>
+        <li><b>pyloudnorm</b> <i>YouTube loudness</i></li>
+        <li><b>Sound effects</b> <i>synthesised in code</i></li>
+        <li><b>100% original audio</b> <i>no stock clips</i></li>
+      </ul>
+    </div>
+    <div class="card c6">
+      <h2><span class="num">6</span>Notes, PDFs, slides</h2>
+      <ul>
+        <li><b>HTML + CSS → Chrome</b> <i>print to PDF</i></li>
+        <li><b>PptxGenJS</b> <i>PowerPoint deck</i></li>
+        <li><b>Microsoft PowerPoint</b> <i>slide check</i></li>
+        <li><b>Open fonts</b> <i>Atkinson, Kalam, Anton</i></li>
+      </ul>
+    </div>
+    <div class="card c7">
+      <h2><span class="num">7</span>App &amp; build</h2>
+      <ul>
+        <li><b>Next.js 16</b> <i>web app &amp; live lab</i></li>
+        <li><b>TypeScript · Tailwind v4</b></li>
+        <li><b>Node.js · Python 3.11</b></li>
+        <li><b>Git</b> <i>every change saved</i></li>
+      </ul>
+    </div>
+    <div class="card c8">
+      <h2><span class="num">8</span>Delivery</h2>
+      <ul>
+        <li><b>Google Drive</b> <i>shared folder</i></li>
+        <li><b>Claude in Chrome</b> <i>folder tidy-up</i></li>
+        <li><b>Mascot "Kan"</b> <i>original design</i></li>
+        <li><b>Formats</b> <i>16:9, 9:16, PDF, PPT</i></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <div class="stats">
+      <div><b>6</b>videos &amp; Shorts</div>
+      <div><b>3</b>PDF notes &amp; worksheets</div>
+      <div><b>1</b>teacher deck</div>
+      <div><b>324</b>checks passing</div>
+    </div>
+    <div>All content original · no stock media · made Oct 2026</div>
+  </footer>
+</body>
+</html>
