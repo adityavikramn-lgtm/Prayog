@@ -51,6 +51,13 @@ export default function Home() {
       </section>
 
       <Link
+        href="/solve"
+        className="rounded-xl bg-[#4ef0c4] px-6 py-5 text-xl font-bold text-board hover:opacity-90"
+      >
+        Ask a physics question, see it in 3D →
+      </Link>
+
+      <Link
         href="/lab/projectile"
         className="rounded-xl border border-velocity px-6 py-5 text-xl font-bold text-velocity hover:bg-board-raised"
       >

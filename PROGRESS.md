@@ -55,12 +55,23 @@
 - Tests (16): Example 5.1 two ways, slip profile limits, Hall–Petch linear in d^(−1/2), Example 8.2 35.6 %CW two ways, quiz 36 %, annealing laws, script speakable, syllabus coverage, length.
 - Voice: `npm run voice -- defects --engine=clone --emotion=0.7 --bass=5`; render `npm run render:explainer -- defects`.
 
+### Student solver in 3D: /solve (2026-10-31), Phase 5 reshaped for students (user's choices: Gemini free tier; projectile, incline, circular + banking, SHM)
+- `src/solver/`: six checked question types (projectile from a height, block on an incline (released or pushed up), banked/flat road, conical pendulum, spring, pendulum). Each solves with formulas and is checked by an independent RK4 run (or a force-balance bisection for the banked road); "verified" only when every pair agrees to 0.1 %. JEE trig (37°/53°) built in.
+- `src/solve3d/`: three.js scenes (@react-three/fiber + drei) driven by the same motion functions as the answer; arrows with a different head per quantity (solid / double / open cone); labels as canvas sprites (drei Html labels broke when they mounted and unmounted every frame); live readout + energy bars outside the canvas; play/pause/scrub/speed; camera steps back on phones.
+- `/solve`: type or photograph a question → `/api/read` (Gemini, server-side, key from `.env.local` only) returns the topic + numbers (zod-checked, only known keys kept) → numbers shown for the student to confirm → code solves. Unsupported topics: AI-only text clearly marked "Not verified, needs teacher review", no 3D. Works fully without a key (pick the topic, type the numbers).
+- Gemini: `interactions` endpoint, `x-goog-api-key`, model from `GEMINI_MODEL` (default `gemini-3.5-flash-lite`, checked in Google's docs on 2026-10-31). Per-IP limit 15 requests / 10 min (per server instance).
+- Site colour tokens in `styles/global.css` synced with `src/theme.ts` (navy).
+- Tests (27): every example formula = simulation, hand-checked JEE values, 240 seeded random questions, banked force balance, bad input → plain error, AI reply parsing/cleaning, AI never answers supported types.
+
 ## Next
+- /solve: add the Gemini key (ACTION NEEDED) and test 5 real questions incl. photos; then Phase 6: GitHub + Vercel public link.
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
 - A Coulomb lab page (`/lab/coulomb`) and a Coulomb Short.
 
 ## Known issues / open questions
+- Gemini free-tier limits are shown only in AI Studio (not in the docs pages); on the free tier Google may use prompts to improve its products. The per-IP limit is in memory, so on Vercel it is per server instance (best effort).
+- The Gemini interactions request/response shape was taken from the docs but not yet tested with a real key.
 - Phase diagrams: key points are the textbook values; curves between them are smooth approximations (fine for reading shapes, not for reading 3 s.f. off the curve). The Fe–C δ corner uses standard handbook compositions (0.09 / 0.17 / 0.53 wt% C); the book text gives only 1493 °C.
 - ElevenLabs: their pricing page lists the commercial licence under the paid Starter plan, not Free. Fine for an application demo; check before monetised or company use.
 - Hemisphere video assumes the string stays tangent to the surface and the string itself slides without friction (stated on screen).
