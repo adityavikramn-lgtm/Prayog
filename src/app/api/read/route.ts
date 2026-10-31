@@ -1,7 +1,8 @@
 // Reads a typed or photographed physics question with Gemini (server-side only; the key never reaches
 // the browser). Returns the question type and the numbers; the browser then solves and checks them.
 
-import { AIResult, AI_JSON_SCHEMA, cleanParams, extractText, readerInstructions } from "../../../solver/ai";
+import { paramsFromGiven } from "../../../solver/ai";
+import { readQuestion } from "../../../solver/gemini";
 
 const MAX_TEXT = 3000;
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -45,34 +46,18 @@ export async function POST(request: Request) {
   if (!text.trim() && !image) return reply(400, { status: "bad_input", message: "Type a question or add a photo first." });
 
   const model = process.env.GEMINI_MODEL?.trim() || "gemini-3.5-flash-lite";
-  const input: object[] = [{ type: "text", text: `${readerInstructions()}\n\nStudent's question:\n${text.trim() || "(see the photo)"}` }];
-  if (image) input.push({ type: "image", data: image.data, mime_type: image.mime });
-
-  let raw: unknown;
-  try {
-    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-      method: "POST",
-      headers: { "x-goog-api-key": key, "Content-Type": "application/json" },
-      body: JSON.stringify({ model, input, response_format: { type: "text", mime_type: "application/json", schema: AI_JSON_SCHEMA } }),
-    });
-    if (res.status === 429) return reply(429, { status: "busy", message: "The free AI quota is used up for now. Please try later, or type the numbers below." });
-    if (!res.ok) return reply(502, { status: "ai_error", message: `The AI service said ${res.status}. Please try again, or type the numbers below.` });
-    raw = await res.json();
-  } catch {
-    return reply(502, { status: "ai_error", message: "Could not reach the AI service. Please try again, or type the numbers below." });
+  const out = await readQuestion({ key, model, text, image });
+  if (!out.ok) {
+    if (process.env.NODE_ENV !== "production") console.warn("[api/read]", out.reason, out.status, out.detail ?? "");
+    if (out.reason === "quota") return reply(429, { status: "busy", message: "The free AI quota is used up for now. Please try later, or type the numbers below." });
+    return reply(502, { status: "ai_error", message: "The AI could not read that one. Please try again, or pick the topic and type the numbers below." });
   }
-
-  const out = extractText(raw);
-  let parsed: AIResult;
-  try {
-    parsed = AIResult.parse(JSON.parse(out ?? ""));
-  } catch {
-    return reply(502, { status: "ai_error", message: "The AI's reply was not in the expected form. Please try again, or type the numbers below." });
-  }
-
+  const parsed = out.result;
   if (parsed.kind === "supported" && parsed.template) {
-    return reply(200, { status: "ok", template: parsed.template, params: cleanParams(parsed.template, parsed.params), asked: parsed.asked, question: parsed.question });
+    const params = paramsFromGiven(parsed.template, parsed.given);
+    const given = parsed.given.filter((g) => g.name in params).map((g) => ({ name: g.name, value: g.value, from: g.from_text }));
+    return reply(200, { status: "ok", template: parsed.template, params, given, asked: parsed.asked, question: parsed.question });
   }
   if (parsed.kind === "unsupported") return reply(200, { status: "unsupported", question: parsed.question, answer: parsed.answer_text });
-  return reply(200, { status: "not_physics", question: parsed.question, message: "That does not look like a physics question." });
+  return reply(200, { status: "not_physics", question: parsed.question, message: "That does not look like a physics question. Try a physics question, or pick a topic below." });
 }

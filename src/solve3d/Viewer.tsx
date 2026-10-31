@@ -108,7 +108,7 @@ export default function Viewer({ id, params }: { id: TemplateId; params: P }) {
   const camPos: [number, number, number] = sc.camera ? [tx + (sc.camera[0] - tx) * back, ty + (sc.camera[1] - ty) * back, tz + (sc.camera[2] - tz) * back] : [tx + sc.distance * 0.35 * back, ty + sc.distance * 0.35 * back, tz + sc.distance * back];
   const hud = hudFor(id, params, t);
   return (
-    <div className="relative h-[460px] w-full overflow-hidden rounded-2xl border border-board-line sm:h-[560px]" style={{ background: "radial-gradient(circle at 50% 30%, #18245a, #0b1022 70%)" }}>
+    <div className="relative h-[400px] w-full overflow-hidden rounded-2xl border border-board-line sm:h-[560px]" style={{ background: "radial-gradient(circle at 50% 30%, #18245a, #0b1022 70%)" }}>
       <Canvas key={key} shadows camera={{ position: camPos, fov: 45 }} dpr={[1, 2]}>
         <ambientLight intensity={0.55} />
         <directionalLight position={[8, 14, 10]} intensity={1.4} castShadow />
@@ -117,10 +117,10 @@ export default function Viewer({ id, params }: { id: TemplateId; params: P }) {
         <OrbitControls target={[tx, ty, tz]} enableDamping makeDefault />
       </Canvas>
       <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center gap-2 bg-gradient-to-t from-black/70 to-transparent p-3 text-sm">
-        <button className="rounded-lg bg-white/10 px-3 py-1.5 font-bold hover:bg-white/20" onClick={() => setPlaying((x) => !x)}>
+        <button className="rounded-lg bg-white/10 px-3 py-2 font-bold hover:bg-white/20" onClick={() => setPlaying((x) => !x)}>
           {playing ? "❚❚ Pause" : "▶ Play"}
         </button>
-        <button className="rounded-lg bg-white/10 px-3 py-1.5 font-bold hover:bg-white/20" onClick={() => setT(0)}>
+        <button className="rounded-lg bg-white/10 px-3 py-2 font-bold hover:bg-white/20" onClick={() => setT(0)}>
           ↺ Restart
         </button>
         <input
@@ -138,7 +138,7 @@ export default function Viewer({ id, params }: { id: TemplateId; params: P }) {
         />
         <span className="w-20 text-right tabular-nums text-chalk-dim">{t.toFixed(2)} s</span>
         {SPEEDS.map((s) => (
-          <button key={s} className={`rounded-lg px-2 py-1.5 font-bold ${s === speed ? "bg-[#4ef0c4] text-board" : "bg-white/10 hover:bg-white/20"}`} onClick={() => setSpeed(s)}>
+          <button key={s} className={`rounded-lg px-2.5 py-2 font-bold ${s === speed ? "bg-[#4ef0c4] text-board" : "bg-white/10 hover:bg-white/20"}`} onClick={() => setSpeed(s)}>
             {s}×
           </button>
         ))}

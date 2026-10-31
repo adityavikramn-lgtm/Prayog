@@ -3,6 +3,7 @@
 import "katex/dist/katex.min.css";
 import dynamic from "next/dynamic";
 import React, { useMemo, useRef, useState } from "react";
+import { RichText } from "../components/RichText";
 import { Tex } from "../components/Tex";
 import { TEMPLATES, TemplateId, solveTemplate } from "../solver";
 import { fmt, relDiff } from "../solver/common";
@@ -10,7 +11,7 @@ import { COLORS } from "../theme";
 
 const Viewer = dynamic(() => import("./Viewer"), {
   ssr: false,
-  loading: () => <div className="flex h-[460px] items-center justify-center rounded-2xl border border-board-line text-chalk-dim sm:h-[560px]">Loading 3D…</div>,
+  loading: () => <div className="flex h-[400px] items-center justify-center rounded-2xl border border-board-line text-chalk-dim sm:h-[560px]">Loading 3D…</div>,
 });
 
 type Values = Record<string, string>;
@@ -40,7 +41,7 @@ async function photoToDataUrl(file: File): Promise<string> {
 type Read =
   | { kind: "idle" }
   | { kind: "busy" }
-  | { kind: "ok"; question: string; asked: string[] }
+  | { kind: "ok"; question: string; asked: string[]; given: { name: string; value: number; from: string }[] }
   | { kind: "unsupported"; question: string; answer: string }
   | { kind: "message"; text: string };
 
@@ -50,7 +51,10 @@ export default function SolveApp() {
   const [text, setText] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [read, setRead] = useState<Read>({ kind: "idle" });
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const readRef = useRef<HTMLDivElement>(null);
+  const reveal = () => setTimeout(() => readRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   const template = TEMPLATES.find((t) => t.id === id)!;
 
   const result = useMemo(() => {
@@ -81,9 +85,12 @@ export default function SolveApp() {
       if (body.status === "ok" && TEMPLATES.some((t) => t.id === body.template)) {
         setId(body.template);
         setValues(toValues(body.params));
-        setRead({ kind: "ok", question: body.question, asked: body.asked ?? [] });
-      } else if (body.status === "unsupported") setRead({ kind: "unsupported", question: body.question, answer: body.answer });
-      else setRead({ kind: "message", text: body.message ?? "Something went wrong. Please type the numbers below." });
+        setRead({ kind: "ok", question: body.question, asked: body.asked ?? [], given: body.given ?? [] });
+        reveal();
+      } else if (body.status === "unsupported") {
+        setRead({ kind: "unsupported", question: body.question, answer: body.answer });
+        reveal();
+      } else setRead({ kind: "message", text: body.message ?? "Something went wrong. Please type the numbers below." });
     } catch {
       setRead({ kind: "message", text: "Could not reach the server. Please type the numbers below." });
     }
@@ -108,29 +115,38 @@ export default function SolveApp() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && (text.trim() || photo)) void ask();
+          }}
           rows={3}
           placeholder={template.exampleQuestion}
           className="w-full resize-y rounded-xl border border-board-line bg-board p-3 text-lg outline-none focus:border-[#4ef0c4]"
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button onClick={ask} disabled={read.kind === "busy" || (!text.trim() && !photo)} className="rounded-xl px-5 py-2.5 font-extrabold text-board disabled:opacity-40" style={{ background: COLORS.kan }}>
-            {read.kind === "busy" ? "Reading…" : "Read my question"}
+            {read.kind === "busy" ? "Reading… (about 5 s)" : "Read my question"}
           </button>
-          <button onClick={() => fileRef.current?.click()} className="rounded-xl bg-white/10 px-4 py-2.5 font-bold hover:bg-white/20">
-            📷 Add a photo
+          <button onClick={() => cameraRef.current?.click()} className="rounded-xl bg-white/10 px-4 py-2.5 font-bold hover:bg-white/20">
+            📷 Take a photo
           </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={async (e) => {
-              const f = e.target.files?.[0];
-              if (f) setPhoto(await photoToDataUrl(f));
-              e.target.value = "";
-            }}
-          />
+          <button onClick={() => galleryRef.current?.click()} className="rounded-xl bg-white/10 px-4 py-2.5 font-bold hover:bg-white/20">
+            🖼 Upload image
+          </button>
+          {[cameraRef, galleryRef].map((ref, i) => (
+            <input
+              key={i}
+              ref={ref}
+              type="file"
+              accept="image/*"
+              capture={i === 0 ? "environment" : undefined}
+              className="hidden"
+              onChange={async (e) => {
+                const f = e.target.files?.[0];
+                if (f) setPhoto(await photoToDataUrl(f));
+                e.target.value = "";
+              }}
+            />
+          ))}
           {photo && (
             <span className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -144,10 +160,24 @@ export default function SolveApp() {
             use an example
           </button>
         </div>
+        <div ref={readRef} className="scroll-mt-4" />
         {read.kind === "ok" && (
-          <div className="mt-3 rounded-xl border p-3 text-sm" style={{ borderColor: COLORS.kan }}>
-            <b style={{ color: COLORS.kan }}>Read as: {template.title}.</b> {read.question}
-            <div className="text-chalk-dim">Check the numbers below match your question. Change any that are wrong; the answer updates instantly.</div>
+          <div className="mt-3 flex flex-col gap-2 rounded-xl border p-3 text-sm sm:p-4" style={{ borderColor: COLORS.kan }}>
+            <div>
+              <b style={{ color: COLORS.kan }}>Read as: {template.title}.</b> <span className="italic">{read.question}</span>
+            </div>
+            {read.given.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {read.given.map((g) => (
+                  <span key={g.name} className="rounded-lg border border-board-line bg-board px-2 py-1">
+                    <b>{template.fields.find((f) => f.key === g.name)?.label ?? g.name} = {g.value}</b>
+                    <span className="text-chalk-dim"> from “{g.from}”</span>
+                  </span>
+                ))}
+              </div>
+            )}
+            {read.asked.length > 0 && <div className="text-chalk-dim">You asked: {read.asked.join(" · ")}</div>}
+            <div className="text-chalk-dim">Check these numbers. If one is wrong, change it below; the answer and the 3D update instantly.</div>
           </div>
         )}
         {read.kind === "message" && <div className="mt-3 rounded-xl border border-board-line p-3 text-sm text-chalk-dim">{read.text}</div>}
@@ -158,7 +188,25 @@ export default function SolveApp() {
             </div>
             <div className="mt-1 text-sm text-chalk-dim">This topic has no checked 3D simulation yet, so there is no 3D scene and the numbers below were not checked by code.</div>
             <div className="mt-2 text-sm italic">{read.question}</div>
-            <pre className="mt-2 whitespace-pre-wrap font-sans">{read.answer}</pre>
+            <div className="mt-3 flex flex-col gap-2 text-base leading-relaxed">
+              {read.answer
+                // One step per line even if the AI ran them together ("1. … 2. …"), and the answer on its own line.
+                .replace(/\s+(?=\d{1,2}\.\s)/g, "\n")
+                .replace(/\s*(Answer\s*:)/i, "\n$1")
+                .split(/\n+/)
+                .filter((l) => l.trim())
+                .map((l, i) =>
+                  /^answer\s*:/i.test(l.trim()) ? (
+                    <div key={i} className="rounded-lg px-3 py-2 font-extrabold" style={{ background: `${COLORS.acceleration}22`, color: COLORS.displacement }}>
+                      <RichText text={l.trim()} />
+                    </div>
+                  ) : (
+                    <div key={i} className="overflow-x-auto">
+                      <RichText text={l.trim()} />
+                    </div>
+                  ),
+                )}
+            </div>
           </div>
         )}
       </section>
@@ -193,7 +241,10 @@ export default function SolveApp() {
                 inputMode="decimal"
                 value={values[f.key] ?? ""}
                 placeholder={f.optional ? "optional" : ""}
-                onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                onChange={(e) => {
+                  setValues((v) => ({ ...v, [f.key]: e.target.value }));
+                  if (read.kind === "unsupported") setRead({ kind: "idle" });
+                }}
                 className="w-36 rounded-lg border border-board-line bg-board px-3 py-2 text-lg tabular-nums outline-none focus:border-[#4ef0c4]"
               />
             </label>
@@ -201,7 +252,11 @@ export default function SolveApp() {
         </div>
       </section>
 
-      {!result.ok ? (
+      {read.kind === "unsupported" ? (
+        <div className="rounded-xl border border-board-line p-4 text-sm text-chalk-dim">
+          3D scenes are available for the topics above. Pick one to try a question that the 3D solver can check.
+        </div>
+      ) : !result.ok ? (
         <div className="rounded-xl border p-4" style={{ borderColor: COLORS.force }}>
           <b style={{ color: COLORS.force }}>Check the numbers:</b> {result.error}
         </div>
@@ -231,7 +286,7 @@ export default function SolveApp() {
         </section>
       )}
 
-      {result.ok && (
+      {result.ok && read.kind !== "unsupported" && (
         <section className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
           <div className="rounded-2xl border border-board-line bg-board-raised p-5">
             <h2 className="mb-3 text-xl font-extrabold">Step by step</h2>

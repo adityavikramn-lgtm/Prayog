@@ -73,7 +73,8 @@
     "notes:motion-plane": "tsx scripts/motion-plane-notes.mts",
     "notes:middle": "tsx scripts/middle-notes.mts",
     "deck:motion-plane": "tsx scripts/motion-plane-deck.mts",
-    "portfolio": "tsx scripts/portfolio.mts"
+    "portfolio": "tsx scripts/portfolio.mts",
+    "read-test": "tsx scripts/read-test.mts"
   },
   "allowScripts": {
     "esbuild": false

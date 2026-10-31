@@ -63,15 +63,20 @@
 - Site colour tokens in `styles/global.css` synced with `src/theme.ts` (navy).
 - Tests (27): every example formula = simulation, hand-checked JEE values, 240 seeded random questions, banked force balance, bad input → plain error, AI reply parsing/cleaning, AI never answers supported types.
 
+### /solve with the real Gemini key (2026-10-31)
+- Live test (`npm run read-test`): 8/8 questions read correctly (projectile incl. tower + "horizontally", incline pushed up, banked, spring in g/cm, conical, Coulomb → other-topic answer, non-physics), plus a handwritten-style photo. ~4–6 s each with gemini-3.5-flash-lite.
+- Fix found by the live test: the AI dropped numbers. It now returns a "given" list (name, value, the exact words) and must never give the asked quantity; the page shows each number with its source words.
+- Other physics topics: step-by-step answer with LaTeX, one step per line, highlighted "Answer:" line, clearly marked Not verified; the 3D section hides meanwhile. LaTeX single backslashes in the JSON reply are repaired (	ext was turning into a tab).
+- Phone: separate Take photo / Upload image buttons, smaller 3D view, bigger player buttons, auto-scroll to what was read, no sideways overflow at 375 px.
+
 ## Next
-- /solve: add the Gemini key (ACTION NEEDED) and test 5 real questions incl. photos; then Phase 6: GitHub + Vercel public link.
+- Phase 6: GitHub + Vercel public link for /solve (user creates accounts; add GEMINI_API_KEY as a Vercel environment variable).
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
 - A Coulomb lab page (`/lab/coulomb`) and a Coulomb Short.
 
 ## Known issues / open questions
 - Gemini free-tier limits are shown only in AI Studio (not in the docs pages); on the free tier Google may use prompts to improve its products. The per-IP limit is in memory, so on Vercel it is per server instance (best effort).
-- The Gemini interactions request/response shape was taken from the docs but not yet tested with a real key.
 - Phase diagrams: key points are the textbook values; curves between them are smooth approximations (fine for reading shapes, not for reading 3 s.f. off the curve). The Fe–C δ corner uses standard handbook compositions (0.09 / 0.17 / 0.53 wt% C); the book text gives only 1493 °C.
 - ElevenLabs: their pricing page lists the commercial licence under the paid Starter plan, not Free. Fine for an application demo; check before monetised or company use.
 - Hemisphere video assumes the string stays tangent to the surface and the string itself slides without friction (stated on screen).
