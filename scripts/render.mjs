@@ -42,6 +42,8 @@ const CATALOG = {
   middle: { formats: ["measure", "friction"], beats: "per-line", langs: ["en"] },
   // ASE102 Unit III: alloys and phase diagrams, full lesson (`npm run voice -- phase`).
   phase: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
+  // ASE102 Unit II: imperfections in solids and strengthening (`npm run voice -- defects`).
+  defects: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);

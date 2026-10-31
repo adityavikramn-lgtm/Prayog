@@ -6,6 +6,7 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
+import { DEFECTS_FPS, DefectsCover, DefectsExplainer, DefectsExplainerProps, defectsMetadata } from "../templates/defects/Explainer";
 import { PHASE_FPS, PhaseCover, PhaseExplainer, PhaseExplainerProps, phaseMetadata } from "../templates/phase/Explainer";
 import { PRESSURE_FPS, PressureCover, PressureExplainer, PressureExplainerProps, pressureMetadata } from "../templates/pressure/Explainer";
 import { FrictionCover, FrictionShort, MeasureCover, MeasureShort, frictionMetadata, measureMetadata } from "../shorts/MiddleShorts";
@@ -140,6 +141,18 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={phaseMetadata}
       />
       <Still id="phase-explainer-cover" component={PhaseCover} width={1920} height={1080} />
+      <Composition
+        id="defects-explainer"
+        component={DefectsExplainer}
+        schema={DefectsExplainerProps}
+        durationInFrames={300}
+        fps={DEFECTS_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={defectsMetadata}
+      />
+      <Still id="defects-explainer-cover" component={DefectsCover} width={1920} height={1080} />
       <Composition
         id="teacher-demo"
         component={TeacherDemo}

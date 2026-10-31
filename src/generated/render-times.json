@@ -58,5 +58,9 @@
   "phase-explainer-en": {
     "videoSeconds": 1318.9,
     "renderSeconds": 1219
+  },
+  "defects-explainer-en": {
+    "videoSeconds": 535.7,
+    "renderSeconds": 381
   }
 }

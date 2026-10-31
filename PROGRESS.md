@@ -48,6 +48,13 @@
 - Tests (25): lever rule vs mass balance (200 tie lines), book values (31.5/42.5 → 0.68/0.32; 11/98 → 0.67/0.33; pearlite 0.89/0.11; 0.40 % C → 0.51/0.49; 1.20 % C → 0.93/0.07; primary α 0.50), carbon/tin balances, lines meet at invariant points, Gibbs cases, water curves, area fractions, script fully speakable, syllabus coverage.
 - Voice: `npm run voice -- phase --engine=clone --emotion=0.7 --bass=5`; render `npm run render:explainer -- phase`.
 
+### ASE102 Unit II lesson: imperfections in solids and strengthening (2026-10-31)
+- About 10 minutes, same style and voice as Unit III. Sources: syllabus Unit II, the user's notes 3–4, Callister Ch. 5 (defects) and Ch. 8 (strengthening, recovery, recrystallization, grain growth).
+- `src/templates/defects/`: `model.ts` (vacancies Nv = N e^(−Qv/kT) with the book's copper example, Peierls–Nabarro slip profile for the moving edge dislocation, Hall–Petch, %CW, Avrami and d² − d0² = Kt for the annealing drawings), `script.ts` (12 sections, 71 lines), `Explainer.tsx` (reuses the Unit III drawing blocks).
+- Hall–Petch numbers are labelled "example values" (σ0 = 70 MPa, ky = 0.74 MPa·m½); the strength/ductility vs annealing curve is labelled "shape only".
+- Tests (16): Example 5.1 two ways, slip profile limits, Hall–Petch linear in d^(−1/2), Example 8.2 35.6 %CW two ways, quiz 36 %, annealing laws, script speakable, syllabus coverage, length.
+- Voice: `npm run voice -- defects --engine=clone --emotion=0.7 --bass=5`; render `npm run render:explainer -- defects`.
+
 ## Next
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
