@@ -75,6 +75,12 @@
 - Live test (`npm run scene-test`): dropped stone, proton in B, elastic collision, satellite period, friction stop, spring compression, bounce height all match the book on a good run; the AI's scenes vary run to run (one run built a wrong spring scene), which the agree/disagree check exposes.
 - Tests: 13 simulator checks against exact physics (projectile, spring period, r = mv/qB and its period, elastic/inelastic collisions, orbit period, friction stop, Coulomb closest approach, floor placement, bounce e²h, tidyScene).
 
+### Analytic functions from zero (2026-10-31), maths lesson for YouTube (no subject code on screen)
+- Source: the syllabus Unit I (differentiability and analyticity, Cauchy–Riemann, harmonic functions), the textbook chapter (the scanned notes are the same chapter) and the user's model questions (where analytic, find the constants, harmonic in Cartesian/polar, conjugate, level curves, f′ = 0).
+- `src/templates/complex/`: `model.ts` (complex arithmetic, every function as u, v and f(z); numeric CR gap, Laplacian, direction quotient; 20 MCQs with worked answers), `script.ts` (16 teaching sections from zero, 20 MCQs with a 5 s think, 5 subjective exam answers, recap; ~28 min), `Explainer.tsx` (complex plane, z² grid mapping, approach-from-every-direction with the Δf/Δz pointer, KaTeX boards, marching-squares level curves with ∇u ⟂ ∇v, MCQ cards).
+- Tests (15): every analytic example passes CR and Laplace numerically and u + iv equals the stated f(z); z̄ quotient depends on direction (1, −1, e^{−2iφ}); |z|², (x − iy)², iz − |z|² satisfy CR only at 0; (x³ + xy) + i(y³ − 3x) only at two points; MCQ facts.
+- Voice: `npm run voice -- complex --engine=clone --emotion=0.7 --bass=5`; render `npm run render:explainer -- complex`.
+
 ## Next
 - Engines for chapters the simulator cannot show: ray optics (lens/mirror ray diagrams), DC circuits (solve the netlist, animate current), waves.
 - Phase 6: GitHub + Vercel public link for /solve (user creates accounts; add GEMINI_API_KEY as a Vercel environment variable).

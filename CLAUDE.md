@@ -30,6 +30,7 @@ All Remotion packages must stay on the **same exact version**. `overrides.zod` i
 - `npm run render:explainer -- phase` — ASE102 Unit III, alloys and phase diagrams (16:9, ~23 min). Voice: `npm run voice -- phase --engine=clone --emotion=0.7 --bass=5`.
 - `npm run render:explainer -- defects` — ASE102 Unit II, defects and strengthening (~10 min). Voice: `npm run voice -- defects --engine=clone --emotion=0.7 --bass=5`.
 - Student solver: http://localhost:3000/solve (3D, works without a key). AI reading needs `GEMINI_API_KEY` (optional `GEMINI_MODEL`) in `.env.local`; route `src/app/api/read/route.ts`, solvers in `src/solver/`, scenes in `src/solve3d/`.
+- `npm run render:explainer -- complex` — Analytic functions from zero (maths, ~28 min, MCQs + exam answers). Voice: `npm run voice -- complex --engine=clone --emotion=0.7 --bass=5`.
 - Writing style for all on-screen text: plain, spoken, human. Short sentences, no hype words.
 - `npm run render:explainer -- hemisphere` — the rough-hemisphere work problem (16:9, ~5.5 min). Voice: `npm run voice -- hemisphere --dry-run` (free), `npm run voice -- voices`, `npm run voice -- hemisphere` (ElevenLabs; key + voice id in `.env.local`, one MP3 per line in `public/voice/hemisphere-explainer-en/`). Each line has `text` (caption) and `say` (what the voice reads); captions and visuals follow the clip lengths (`plan.ts`).
 

@@ -62,5 +62,9 @@
   "defects-explainer-en": {
     "videoSeconds": 535.7,
     "renderSeconds": 381
+  },
+  "complex-explainer-en": {
+    "videoSeconds": 1516,
+    "renderSeconds": 1093
   }
 }

@@ -44,6 +44,8 @@ const CATALOG = {
   phase: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
   // ASE102 Unit II: imperfections in solids and strengthening (`npm run voice -- defects`).
   defects: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
+  // Analytic functions from zero, with MCQs and worked exam answers (`npm run voice -- complex`).
+  complex: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);

@@ -6,6 +6,7 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
+import { COMPLEX_FPS, ComplexCover, ComplexExplainer, ComplexExplainerProps, complexMetadata } from "../templates/complex/Explainer";
 import { DEFECTS_FPS, DefectsCover, DefectsExplainer, DefectsExplainerProps, defectsMetadata } from "../templates/defects/Explainer";
 import { PHASE_FPS, PhaseCover, PhaseExplainer, PhaseExplainerProps, phaseMetadata } from "../templates/phase/Explainer";
 import { PRESSURE_FPS, PressureCover, PressureExplainer, PressureExplainerProps, pressureMetadata } from "../templates/pressure/Explainer";
@@ -153,6 +154,18 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={defectsMetadata}
       />
       <Still id="defects-explainer-cover" component={DefectsCover} width={1920} height={1080} />
+      <Composition
+        id="complex-explainer"
+        component={ComplexExplainer}
+        schema={ComplexExplainerProps}
+        durationInFrames={300}
+        fps={COMPLEX_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={complexMetadata}
+      />
+      <Still id="complex-explainer-cover" component={ComplexCover} width={1920} height={1080} />
       <Composition
         id="teacher-demo"
         component={TeacherDemo}

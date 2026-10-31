@@ -27,6 +27,7 @@ import * as plane from "../src/shorts/plane";
 import * as middle from "../src/shorts/middle";
 import * as phase from "../src/templates/phase/script";
 import * as defects from "../src/templates/defects/script";
+import * as complexLesson from "../src/templates/complex/script";
 
 /** Where each video's clips go; the render script looks in public/voice/<template>-<format>-<lang>. */
 const FOLDER: Record<string, string> = {
@@ -41,6 +42,7 @@ const FOLDER: Record<string, string> = {
   "middle-friction": "middle-friction-en",
   phase: "phase-explainer-en",
   defects: "defects-explainer-en",
+  complex: "complex-explainer-en",
 };
 
 /** Every video that has an English narration: one { key, say } per caption line. */
@@ -56,6 +58,7 @@ const NARRATION: Record<string, () => { key: string; say: string; show?: string 
   "plane-monkey": () => plane.MONKEY_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
   "middle-measure": () => middle.MEASURE_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
   "middle-friction": () => middle.FRICTION_LINES.map((l, i) => ({ key: plane.lineKey(i), say: l.voice ?? l.say, show: l.say })),
+  complex: () => complexLesson.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: complexLesson.lineKey(b.id, i), say: complexLesson.spokenText(line) }))),
   defects: () => {
     const values = defects.scriptValues();
     return defects.BEATS.flatMap((b) => b.lines.map((line, i) => ({ key: defects.lineKey(b.id, i), say: defects.spokenText(line, values) })));
