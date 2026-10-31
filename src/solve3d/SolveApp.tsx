@@ -15,6 +15,16 @@ const Viewer = dynamic(() => import("./Viewer"), {
   loading: () => <div className="flex h-[400px] items-center justify-center rounded-2xl border border-board-line text-chalk-dim sm:h-[560px]">Loading 3D…</div>,
 });
 
+/** One-tap examples, so a first-time student sees what the platform does. */
+const TRY = [
+  { label: "🏀 Throw a ball", question: "A ball is thrown at 20 m/s at 37° above the horizontal. Find its range, maximum height and time of flight." },
+  { label: "🏢 From a tower", question: "A stone is thrown horizontally at 15 m/s from the top of a 45 m high tower. How far from the base does it land?" },
+  { label: "🎱 Collision", question: "A 2 kg ball moving at 6 m/s collides head-on elastically with a stationary 4 kg ball. Find the velocity of the 4 kg ball after the collision." },
+  { label: "🧲 Proton in a magnet", question: "A proton moving at 1.0 × 10^6 m/s enters a uniform magnetic field of 0.1 T at right angles. Find the radius of its path. (m = 1.67 × 10^-27 kg, q = 1.6 × 10^-19 C)" },
+  { label: "🛰 Satellite", question: "A satellite orbits the Earth at a height of 600 km. Find its time period. (M = 6 × 10^24 kg, R = 6400 km, G = 6.67 × 10^-11)" },
+  { label: "🚗 Banked road", question: "A road of radius 100 m is banked at 37°. If μ = 0.25, find the maximum and minimum safe speeds." },
+];
+
 type Values = Record<string, string>;
 const toValues = (p: Record<string, number>) => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, String(v)]));
 
@@ -78,10 +88,15 @@ export default function SolveApp() {
     setRead({ kind: "idle" });
   };
 
-  async function ask() {
+  async function ask(question?: string) {
+    const q = question ?? text;
+    if (question !== undefined) {
+      setText(question);
+      setPhoto(null);
+    }
     setRead({ kind: "busy" });
     try {
-      const res = await fetch("/api/read", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text, image: photo }) });
+      const res = await fetch("/api/read", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: q, image: question !== undefined ? null : photo }) });
       const body = await res.json();
       if (body.status === "ok" && TEMPLATES.some((t) => t.id === body.template)) {
         setId(body.template);
@@ -125,7 +140,7 @@ export default function SolveApp() {
           className="w-full resize-y rounded-xl border border-board-line bg-board p-3 text-lg outline-none focus:border-[#4ef0c4]"
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button onClick={ask} disabled={read.kind === "busy" || (!text.trim() && !photo)} className="rounded-xl px-5 py-2.5 font-extrabold text-board disabled:opacity-40" style={{ background: COLORS.kan }}>
+          <button onClick={() => void ask()} disabled={read.kind === "busy" || (!text.trim() && !photo)} className="rounded-xl px-5 py-2.5 font-extrabold text-board disabled:opacity-40" style={{ background: COLORS.kan }}>
             {read.kind === "busy" ? "Reading… (5–15 s)" : "Read my question"}
           </button>
           <button onClick={() => cameraRef.current?.click()} className="rounded-xl bg-white/10 px-4 py-2.5 font-bold hover:bg-white/20">
@@ -158,9 +173,19 @@ export default function SolveApp() {
               </button>
             </span>
           )}
-          <button className="text-sm text-chalk-dim underline" onClick={() => setText(template.exampleQuestion)}>
-            use an example
-          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-chalk-dim">Try one:</span>
+          {TRY.map((t) => (
+            <button
+              key={t.label}
+              disabled={read.kind === "busy"}
+              onClick={() => void ask(t.question)}
+              className="rounded-full border border-board-line bg-board px-3 py-1.5 font-bold hover:border-[#4ef0c4] disabled:opacity-40"
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
         <div ref={readRef} className="scroll-mt-4" />
         {read.kind === "ok" && (
