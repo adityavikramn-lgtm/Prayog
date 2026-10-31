@@ -54,5 +54,9 @@
   "middle-friction-en": {
     "videoSeconds": 47.4,
     "renderSeconds": 33
+  },
+  "phase-explainer-en": {
+    "videoSeconds": 1318.9,
+    "renderSeconds": 1168
   }
 }

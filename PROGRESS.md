@@ -40,12 +40,21 @@
 - Voice: `scripts/voice.mts` (ElevenLabs REST, one MP3 per line, previous/next text for flow; `--dry-run` uses no credits). Per-line timing in `plan.ts` so captions and visuals follow the voice.
 - Rewritten as a full lesson at the user's request: the complete question shown and read first, then every idea from zero (what work is, each force, why "slowly" means balance, the angle and ds = R dφ, splitting mg, balancing, setting up and doing the two integrals), the answer, its meaning, numbers, traps, recap. 15 beats, 76 lines, each line can add a formula to the board panel and switch on a drawing. Expanded again (user asked for more, zero confusion): a "how to attack it" plan, a sine/cosine refresher (splitting any force), a slow zoomed-in resolution of the weight (radius ⟂ surface, why gravity makes φ with the surface and 90° − φ with the radius, mg cos φ and mg sin φ, end checks), balancing with "out = in" / "up = down" and why each force is or isn't in a direction, and a second method (work-energy theorem). 18 beats, 106 lines, 13 min 11 s with the free Windows voice. (Earlier version: 8 min 50 s (Microsoft Mark, `--engine=windows`); Everygen voices need a paid Everygen plan, ElevenLabs needs a key.
 
+### ASE102 Unit III lesson: alloys and phase diagrams (2026-10-31), for the user's own exam
+- Source: the course syllabus (ASE102.pdf, Unit III) and the textbook (Callister, Ch. 10, plus Section 5.4 for solid solutions). The user's handwritten notes cover Units I–II only; "ASE102 note 2.pdf" is an empty file.
+- `src/templates/phase/`: `model.ts` (diagram lines anchored to the book's points, lever rule, Gibbs rule, water P–T curves from Clausius–Clapeyron, steel microstructure fractions), `script.ts` (22 sections, 187 lines, automatic spoken reading of symbols and numbers), `parts.tsx` (diagrams, Voronoi grains, lamellae, fraction bars), `Explainer.tsx` (scenes, sounds, cover).
+- Covers every syllabus topic: definitions, solubility limit, phases/equilibrium/metastable, why we alloy, substitutional vs interstitial and Hume-Rothery, unary (water), binary axes, Cu–Ni isomorphous, reading a diagram, lever rule (seesaw + mass balance), cooling Cu–Ni with live tie line and growing grains, coring, Gibbs rule, Cu–Ag eutectic, Pb–Sn and solder, the four eutectic microstructures, eutectic/eutectoid/peritectic (Cu–Zn), Fe–Fe₃C, eutectoid/hypo/hypereutectoid steels, the three syllabus diagrams, quiz, recap.
+- Microstructure areas are the lever-rule fractions (grains shrunk by √w), and proeutectoid amounts while cooling come from the lever rule on the drawn lines.
+- Tests (25): lever rule vs mass balance (200 tie lines), book values (31.5/42.5 → 0.68/0.32; 11/98 → 0.67/0.33; pearlite 0.89/0.11; 0.40 % C → 0.51/0.49; 1.20 % C → 0.93/0.07; primary α 0.50), carbon/tin balances, lines meet at invariant points, Gibbs cases, water curves, area fractions, script fully speakable, syllabus coverage.
+- Voice: `npm run voice -- phase --engine=clone --emotion=0.7 --bass=5`; render `npm run render:explainer -- phase`.
+
 ## Next
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.
 - A Coulomb lab page (`/lab/coulomb`) and a Coulomb Short.
 
 ## Known issues / open questions
+- Phase diagrams: key points are the textbook values; curves between them are smooth approximations (fine for reading shapes, not for reading 3 s.f. off the curve). The Fe–C δ corner uses standard handbook compositions (0.09 / 0.17 / 0.53 wt% C); the book text gives only 1493 °C.
 - ElevenLabs: their pricing page lists the commercial licence under the paid Starter plan, not Free. Fine for an application demo; check before monetised or company use.
 - Hemisphere video assumes the string stays tangent to the surface and the string itself slides without friction (stated on screen).
 - Hinglish lines are a draft; a Hindi-speaking teacher should review them before publishing.

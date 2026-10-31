@@ -6,6 +6,7 @@ import {
   HemisphereExplainerProps,
   hemisphereMetadata,
 } from "../templates/hemisphere/Explainer";
+import { PHASE_FPS, PhaseCover, PhaseExplainer, PhaseExplainerProps, phaseMetadata } from "../templates/phase/Explainer";
 import { PRESSURE_FPS, PressureCover, PressureExplainer, PressureExplainerProps, pressureMetadata } from "../templates/pressure/Explainer";
 import { FrictionCover, FrictionShort, MeasureCover, MeasureShort, frictionMetadata, measureMetadata } from "../shorts/MiddleShorts";
 import { DropCover, DropShort, MonkeyCover, MonkeyShort, PLANE_FPS, PlaneShortProps, dropMetadata, monkeyMetadata } from "../shorts/PlaneShort";
@@ -127,6 +128,18 @@ export const RemotionRoot: React.FC = () => {
         calculateMetadata={pressureMetadata}
       />
       <Still id="pressure-explainer-cover" component={PressureCover} width={1920} height={1080} />
+      <Composition
+        id="phase-explainer"
+        component={PhaseExplainer}
+        schema={PhaseExplainerProps}
+        durationInFrames={300}
+        fps={PHASE_FPS}
+        width={1920}
+        height={1080}
+        defaultProps={{ lang: "en" as const, voice: {} }}
+        calculateMetadata={phaseMetadata}
+      />
+      <Still id="phase-explainer-cover" component={PhaseCover} width={1920} height={1080} />
       <Composition
         id="teacher-demo"
         component={TeacherDemo}

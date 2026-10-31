@@ -27,6 +27,7 @@ All Remotion packages must stay on the **same exact version**. `overrides.zod` i
 - `npm run render:short -- projectile` / `npm run render:explainer -- projectile` — MP4s + cover PNGs (en + hi) into `renders/`. Flags: `--lang=en`, `--frames=0,300` (PNG check frames into `renders/check/`), `--safe-zones`.
 - Voiceover: `public/voice/<template>-<format>-<lang>/<beat>.mp3` (see `public/voice/README.md`).
 - `npm run render:explainer -- coulomb` · `npm run render:demo -- teacher` (pitch video). Run `npm run stats` first so the pitch shows the current test count; render times are recorded automatically in `src/generated/render-times.json`.
+- `npm run render:explainer -- phase` — ASE102 Unit III, alloys and phase diagrams (16:9, ~23 min). Voice: `npm run voice -- phase --engine=clone --emotion=0.7 --bass=5`.
 - Writing style for all on-screen text: plain, spoken, human. Short sentences, no hype words.
 - `npm run render:explainer -- hemisphere` — the rough-hemisphere work problem (16:9, ~5.5 min). Voice: `npm run voice -- hemisphere --dry-run` (free), `npm run voice -- voices`, `npm run voice -- hemisphere` (ElevenLabs; key + voice id in `.env.local`, one MP3 per line in `public/voice/hemisphere-explainer-en/`). Each line has `text` (caption) and `say` (what the voice reads); captions and visuals follow the clip lengths (`plan.ts`).
 

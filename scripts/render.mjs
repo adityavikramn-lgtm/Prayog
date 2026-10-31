@@ -40,6 +40,8 @@ const CATALOG = {
   plane: { formats: ["drop", "monkey"], beats: "per-line", langs: ["en"] },
   // Class 6–8 Shorts: measurement (Class 6) and friction (Class 8).
   middle: { formats: ["measure", "friction"], beats: "per-line", langs: ["en"] },
+  // ASE102 Unit III: alloys and phase diagrams, full lesson (`npm run voice -- phase`).
+  phase: { formats: ["explainer"], beats: "per-line", langs: ["en"] },
 };
 
 const [format, template, ...flags] = process.argv.slice(2);
