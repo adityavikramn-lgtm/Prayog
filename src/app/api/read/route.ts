@@ -4,8 +4,12 @@
 import { paramsFromGiven } from "../../../solver/ai";
 import { readQuestion } from "../../../solver/gemini";
 
+// Reading a photo can take several seconds; give the hosting platform room (the AI call itself times out at 45 s).
+export const maxDuration = 60;
+
 const MAX_TEXT = 3000;
-const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
+// Vercel accepts request bodies up to about 4.5 MB; photos are shrunk in the browser well below this.
+const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 // Gentle limits so one visitor cannot use up the shared free quota. Per server instance (best effort).
@@ -37,7 +41,7 @@ export async function POST(request: Request) {
     if (typeof body.image === "string" && body.image.startsWith("data:")) {
       const m = /^data:([^;]+);base64,(.+)$/.exec(body.image);
       if (!m || !IMAGE_TYPES.includes(m[1])) return reply(400, { status: "bad_input", message: "Please upload a JPG, PNG or WebP photo." });
-      if ((m[2].length * 3) / 4 > MAX_IMAGE_BYTES) return reply(400, { status: "bad_input", message: "That photo is too big. Please use one under 4 MB." });
+      if ((m[2].length * 3) / 4 > MAX_IMAGE_BYTES) return reply(400, { status: "bad_input", message: "That photo is too big. Please use one under 3 MB." });
       image = { mime: m[1], data: m[2] };
     }
   } catch {

@@ -58,7 +58,6 @@
     "lint": "eslint .",
     "remotion": "remotion studio",
     "render": "remotion render",
-    "deploy": "node deploy.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "render:short": "node scripts/render.mjs short",
