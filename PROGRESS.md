@@ -69,7 +69,14 @@
 - Other physics topics: step-by-step answer with LaTeX, one step per line, highlighted "Answer:" line, clearly marked Not verified; the 3D section hides meanwhile. LaTeX single backslashes in the JSON reply are repaired (	ext was turning into a tab).
 - Phone: separate Take photo / Upload image buttons, smaller 3D view, bigger player buttons, auto-scroll to what was read, no sideways overflow at 375 px.
 
+### Animation for questions outside the 6 topics (2026-10-31), the user asked for an animation with every question
+- `src/sandbox/`: a universal simulator. A second AI call (it never sees the AI's answer) describes the setup as a SceneSpec: point bodies (mass, charge, position, velocity, fixed), uniform g / E / B, Coulomb and Newton gravitation between bodies, springs, drag, a ground with bounce (restitution) or sliding friction, sphere collisions. The simulator (RK4 + event handling) runs it and measures the asked quantity (range, time of flight, max height, bounce height, period, radius of path, final velocity, min distance, max compression, time to stop, distance …). `tidyScene` trims many repeats (e.g. 150 proton loops) to about two.
+- The page compares the AI's numeric answer with the simulation: within 2 % → "Simulation agrees"; otherwise both are shown with "needs teacher review". Optics, circuits, thermodynamics etc. have no simulator yet: text answer, marked not verified.
+- Live test (`npm run scene-test`): dropped stone, proton in B, elastic collision, satellite period, friction stop, spring compression, bounce height all match the book on a good run; the AI's scenes vary run to run (one run built a wrong spring scene), which the agree/disagree check exposes.
+- Tests: 13 simulator checks against exact physics (projectile, spring period, r = mv/qB and its period, elastic/inelastic collisions, orbit period, friction stop, Coulomb closest approach, floor placement, bounce e²h, tidyScene).
+
 ## Next
+- Engines for chapters the simulator cannot show: ray optics (lens/mirror ray diagrams), DC circuits (solve the netlist, animate current), waves.
 - Phase 6: GitHub + Vercel public link for /solve (user creates accounts; add GEMINI_API_KEY as a Vercel environment variable).
 - Generate the ElevenLabs voice once the key and voice id are in `.env.local`, then re-render.
 - Phase 3: verified question engine: 15 original questions, verification suite, "Watch this question", variants, DPP builder, /verified page.

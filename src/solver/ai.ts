@@ -17,6 +17,9 @@ export const AIResult = z.object({
   asked: z.array(z.string()).default([]),
   question: z.string().max(4000).default(""),
   answer_text: z.string().max(6000).default(""),
+  /** For other topics: the main final number in SI base units (m, s, m/s, N, J …), so a simulation can check it. */
+  answer_value: z.number().nullable().default(null),
+  answer_unit: z.string().max(20).default(""),
 });
 export type AIResult = z.infer<typeof AIResult>;
 
@@ -37,6 +40,8 @@ export const AI_JSON_SCHEMA = {
     asked: { type: "array", items: { type: "string" } },
     question: { type: "string" },
     answer_text: { type: "string" },
+    answer_value: { type: "number" },
+    answer_unit: { type: "string" },
   },
   required: ["kind", "template", "given", "asked", "question", "answer_text"],
 };
@@ -61,7 +66,7 @@ How to answer:
    name (exact name from the list), value (converted to SI units), from_text (the exact words it came from).
    Read the question word by word and do not skip any number: speeds, angles, heights, masses, friction (μ), radii, lengths, spring constants.
    Unit conversions: cm → m (÷100), km/h → m/s (×5/18), g (grams) → kg (÷1000), microcoulomb etc. are not used here.
-   Words that mean a number: "horizontally" = angleDeg 0 for a projectile; "smooth" or "frictionless" = mu 0; "from rest" = u 0 on an incline.
+   Words that mean a number: "horizontally" = angleDeg 0 for a projectile; "dropped" or "released from rest" from a height = u 0 and angleDeg 0 for a projectile; "smooth" or "frictionless" = mu 0; "from rest" = u 0 on an incline.
    Angles stay in degrees: projectile angle above the horizontal (negative if thrown downward); incline slope angle; banking angle; conical angle from the vertical; pendulum swing angle.
    Heights: a tower, cliff, building or table height is h for a projectile.
    If g is not stated, add g = 10 with from_text "not given, JEE value".
@@ -69,6 +74,7 @@ How to answer:
    "asked" = what the question wants, in plain words.
 3. If it is physics but none of these types: kind = "unsupported", template = "", given = []. In "answer_text" write a clear, careful step-by-step solution for a student:
    number each step on its own line; write maths in LaTeX between $ signs (for example $F = \\dfrac{kq_1q_2}{r^2}$); use JEE values (g = 10 m/s², k = 9 × 10^9 N m²/C², sin 37° = 3/5); end with a line starting "Answer:". If anything is uncertain, say so.
+   Also put the main final number in "answer_value", converted to SI base units (m, s, m/s, kg, N, J, C, T …), and that unit in "answer_unit" (for example 0.6 and "m", not 60 and "cm").
 4. If it is not a physics question: kind = "not_physics", everything else empty.
 5. Never put a final answer for a supported question anywhere.`;
 }

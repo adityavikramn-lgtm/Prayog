@@ -5,7 +5,7 @@ import { locateEvent, rk4Step } from "../physics/rk4";
 import { Solution, fmt, q, trig } from "./common";
 
 export const ProjectileParams = z.object({
-  u: z.number().positive().max(2000).describe("launch speed, m/s"),
+  u: z.number().min(0).max(2000).describe("launch speed, m/s (0 = dropped from rest)"),
   angleDeg: z.number().min(-89).max(90).describe("launch angle above the horizontal, degrees (negative = thrown downward)"),
   h: z.number().min(0).max(10000).default(0).describe("launch height above the landing ground, m"),
   g: z.number().positive().max(100).default(10),

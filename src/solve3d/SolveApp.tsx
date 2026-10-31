@@ -3,11 +3,12 @@
 import "katex/dist/katex.min.css";
 import dynamic from "next/dynamic";
 import React, { useMemo, useRef, useState } from "react";
-import { RichText } from "../components/RichText";
 import { Tex } from "../components/Tex";
 import { TEMPLATES, TemplateId, solveTemplate } from "../solver";
 import { fmt, relDiff } from "../solver/common";
 import { COLORS } from "../theme";
+import { SceneSpec } from "../sandbox/spec";
+import OtherAnswer from "./OtherAnswer";
 
 const Viewer = dynamic(() => import("./Viewer"), {
   ssr: false,
@@ -42,7 +43,7 @@ type Read =
   | { kind: "idle" }
   | { kind: "busy" }
   | { kind: "ok"; question: string; asked: string[]; given: { name: string; value: number; from: string }[] }
-  | { kind: "unsupported"; question: string; answer: string }
+  | { kind: "unsupported"; question: string; answer: string; answerValue: number | null; answerUnit: string; chapter: string; scene: SceneSpec | null }
   | { kind: "message"; text: string };
 
 export default function SolveApp() {
@@ -88,7 +89,8 @@ export default function SolveApp() {
         setRead({ kind: "ok", question: body.question, asked: body.asked ?? [], given: body.given ?? [] });
         reveal();
       } else if (body.status === "unsupported") {
-        setRead({ kind: "unsupported", question: body.question, answer: body.answer });
+        const sc = body.scene ? SceneSpec.safeParse(body.scene) : null;
+        setRead({ kind: "unsupported", question: body.question, answer: body.answer ?? "", answerValue: typeof body.answerValue === "number" ? body.answerValue : null, answerUnit: body.answerUnit ?? "", chapter: body.chapter ?? "", scene: sc?.success ? sc.data : null });
         reveal();
       } else setRead({ kind: "message", text: body.message ?? "Something went wrong. Please type the numbers below." });
     } catch {
@@ -124,7 +126,7 @@ export default function SolveApp() {
         />
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <button onClick={ask} disabled={read.kind === "busy" || (!text.trim() && !photo)} className="rounded-xl px-5 py-2.5 font-extrabold text-board disabled:opacity-40" style={{ background: COLORS.kan }}>
-            {read.kind === "busy" ? "Reading… (about 5 s)" : "Read my question"}
+            {read.kind === "busy" ? "Reading… (5–15 s)" : "Read my question"}
           </button>
           <button onClick={() => cameraRef.current?.click()} className="rounded-xl bg-white/10 px-4 py-2.5 font-bold hover:bg-white/20">
             📷 Take a photo
@@ -181,34 +183,7 @@ export default function SolveApp() {
           </div>
         )}
         {read.kind === "message" && <div className="mt-3 rounded-xl border border-board-line p-3 text-sm text-chalk-dim">{read.text}</div>}
-        {read.kind === "unsupported" && (
-          <div className="mt-3 rounded-xl border p-4" style={{ borderColor: COLORS.acceleration }}>
-            <div className="font-extrabold" style={{ color: COLORS.acceleration }}>
-              Not verified: AI-only explanation. Needs teacher review.
-            </div>
-            <div className="mt-1 text-sm text-chalk-dim">This topic has no checked 3D simulation yet, so there is no 3D scene and the numbers below were not checked by code.</div>
-            <div className="mt-2 text-sm italic">{read.question}</div>
-            <div className="mt-3 flex flex-col gap-2 text-base leading-relaxed">
-              {read.answer
-                // One step per line even if the AI ran them together ("1. … 2. …"), and the answer on its own line.
-                .replace(/\s+(?=\d{1,2}\.\s)/g, "\n")
-                .replace(/\s*(Answer\s*:)/i, "\n$1")
-                .split(/\n+/)
-                .filter((l) => l.trim())
-                .map((l, i) =>
-                  /^answer\s*:/i.test(l.trim()) ? (
-                    <div key={i} className="rounded-lg px-3 py-2 font-extrabold" style={{ background: `${COLORS.acceleration}22`, color: COLORS.displacement }}>
-                      <RichText text={l.trim()} />
-                    </div>
-                  ) : (
-                    <div key={i} className="overflow-x-auto">
-                      <RichText text={l.trim()} />
-                    </div>
-                  ),
-                )}
-            </div>
-          </div>
-        )}
+        {read.kind === "unsupported" && <OtherAnswer {...read} />}
       </section>
 
       {/* Topic + numbers */}

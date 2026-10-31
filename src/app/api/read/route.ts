@@ -2,7 +2,8 @@
 // the browser). Returns the question type and the numbers; the browser then solves and checks them.
 
 import { paramsFromGiven } from "../../../solver/ai";
-import { readQuestion } from "../../../solver/gemini";
+import { buildScene, readQuestion } from "../../../solver/gemini";
+import { tidyScene } from "../../../sandbox/sim";
 
 // Reading a photo can take several seconds; give the hosting platform room (the AI call itself times out at 45 s).
 export const maxDuration = 60;
@@ -62,6 +63,30 @@ export async function POST(request: Request) {
     const given = parsed.given.filter((g) => g.name in params).map((g) => ({ name: g.name, value: g.value, from: g.from_text }));
     return reply(200, { status: "ok", template: parsed.template, params, given, asked: parsed.asked, question: parsed.question });
   }
-  if (parsed.kind === "unsupported") return reply(200, { status: "unsupported", question: parsed.question, answer: parsed.answer_text });
+  if (parsed.kind === "unsupported") {
+    // Second, independent call: describe the situation as a simulation (it never sees the answer above).
+    let scene = null;
+    let chapter = "";
+    const built = await buildScene({ key, model, question: parsed.question || text });
+    if (built.ok) {
+      chapter = built.chapter;
+      if (built.scene) {
+        try {
+          scene = tidyScene(built.scene); // also proves it runs before we send it to the browser
+        } catch {
+          scene = null;
+        }
+      }
+    } else if (process.env.NODE_ENV !== "production") console.warn("[api/read] scene", built.reason, built.detail ?? "");
+    return reply(200, {
+      status: "unsupported",
+      question: parsed.question,
+      answer: parsed.answer_text,
+      answerValue: parsed.answer_value,
+      answerUnit: parsed.answer_unit,
+      chapter,
+      scene,
+    });
+  }
   return reply(200, { status: "not_physics", question: parsed.question, message: "That does not look like a physics question. Try a physics question, or pick a topic below." });
 }
